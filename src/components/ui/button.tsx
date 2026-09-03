@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'accent' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'accent' | 'danger' | 'gradient';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   isLoading?: boolean;
 }
@@ -21,21 +21,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-all duration-150 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer select-none';
+      'inline-flex items-center justify-center font-medium transition-all duration-200 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer select-none';
 
     const variants = {
       primary:
-        'bg-slate-900 text-white hover:bg-slate-800 shadow-xs active:scale-[0.99] focus-visible:ring-slate-900',
+        'bg-slate-900 text-white hover:bg-slate-800 shadow-sm hover:shadow-md active:scale-[0.98] focus-visible:ring-slate-900 border border-slate-800',
       accent:
-        'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs active:scale-[0.99] focus-visible:ring-indigo-600',
+        'bg-gradient-to-r from-blue-600 via-violet-600 to-fuchsia-500 text-white hover:from-blue-500 hover:via-violet-500 hover:to-fuchsia-400 shadow-md shadow-violet-500/25 hover:shadow-lg hover:shadow-fuchsia-500/25 active:scale-[0.98] focus-visible:ring-violet-500 border border-white/20',
+      gradient:
+        'bg-gradient-to-r from-blue-500 via-emerald-500 to-amber-400 text-white hover:opacity-95 shadow-md shadow-emerald-500/20 hover:shadow-lg active:scale-[0.98] focus-visible:ring-blue-500 border border-white/20',
       secondary:
-        'bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-xs focus-visible:ring-slate-400',
+        'bg-white text-slate-800 border border-slate-200/90 hover:bg-slate-50 hover:border-slate-300 shadow-2xs hover:shadow-xs active:scale-[0.98] focus-visible:ring-indigo-400 backdrop-blur-xs',
       outline:
-        'border border-slate-200 bg-transparent text-slate-700 hover:bg-slate-100 focus-visible:ring-slate-400',
+        'border border-slate-200/90 bg-white/80 text-slate-700 hover:bg-white hover:text-slate-900 hover:border-indigo-300 active:scale-[0.98] focus-visible:ring-indigo-400 backdrop-blur-xs',
       ghost:
-        'text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-300',
+        'text-slate-600 hover:text-slate-900 hover:bg-white/70 focus-visible:ring-slate-300 active:scale-[0.98]',
       danger:
-        'bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-500',
+        'bg-gradient-to-r from-rose-500 to-orange-500 text-white hover:from-rose-400 hover:to-orange-400 shadow-sm shadow-rose-500/20 active:scale-[0.98] focus-visible:ring-rose-500 border border-white/20',
     };
 
     const sizes = {

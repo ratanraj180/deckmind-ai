@@ -11,7 +11,7 @@ import { Footer } from '@/components/layout/Footer';
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-[#fafafb]">
+    <div className="flex min-h-screen flex-col mesh-canvas">
       <Navbar />
       <main className="flex-1">
         {/* SECTION 1 — HERO */}

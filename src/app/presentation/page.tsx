@@ -9,7 +9,7 @@ import { PresentationControls } from '@/components/presentation/PresentationCont
 import { usePresentation } from '@/context/PresentationContext';
 
 export default function PresentationPreviewPage() {
-  const { activeProject, currentSlideIndex, setCurrentSlideIndex, currentSlide } =
+  const { activeProject, currentSlideIndex, setCurrentSlideIndex, currentSlide, hydrated } =
     usePresentation();
   const [showNotes, setShowNotes] = useState(true);
 
@@ -40,8 +40,24 @@ export default function PresentationPreviewPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
+  // Show a minimal shell until client-side state is rehydrated.
+  // This avoids any hydration mismatch because the server and the
+  // client's first render both produce this same static shell.
+  if (!hydrated) {
+    return (
+      <div className="h-screen flex flex-col mesh-canvas overflow-hidden">
+        <header className="h-16 border-b border-slate-200 bg-white px-4 sm:px-6 flex items-center">
+          <span className="text-sm font-bold text-slate-900">DeckMind AI</span>
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-sm text-slate-400 animate-pulse">Loading presentation…</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-[#fafafb] overflow-hidden">
+    <div className="h-screen flex flex-col mesh-canvas overflow-hidden">
       {/* Workspace Header */}
       <PresentationHeader
         showNotes={showNotes}
@@ -58,7 +74,7 @@ export default function PresentationPreviewPage() {
         />
 
         {/* Center: Large 16:9 Presentation Canvas */}
-        <main className="flex-1 bg-slate-100/70 overflow-y-auto flex flex-col justify-between">
+        <main className="flex-1 bg-transparent overflow-y-auto flex flex-col justify-between">
           <div className="flex-1 flex items-center justify-center p-4">
             <SlideViewer slide={currentSlide} />
           </div>

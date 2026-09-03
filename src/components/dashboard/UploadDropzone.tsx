@@ -100,49 +100,40 @@ export function UploadDropzone() {
     }
 
     setIsParsing(true);
-    setParsingStage('Reading document bytes...');
+    setParsingStage('Reading document structure...');
 
     try {
-      console.log(`[DeckMind Upload] Reading file: ${file.name} (${file.size} bytes)`);
-
-      const parsed = await parseDocumentFile(file, stage => {
-        if (stage === 'reading') setParsingStage('Reading document bytes...');
-        else if (stage === 'extracting') setParsingStage('Extracting text & sections across pages...');
-        else if (stage === 'structuring') setParsingStage('Synthesizing document hierarchy...');
-        else if (stage === 'complete') setParsingStage('Document analyzed');
+      const analysis = await parseDocumentFile(file, stage => {
+        setParsingStage(stage);
       });
 
-      setDocumentAnalysis(parsed);
+      setDocumentAnalysis(analysis);
       setIsParsing(false);
-    } catch (err) {
-      console.error('[DeckMind Upload] Failed to parse file:', err);
+    } catch (err: any) {
+      console.error('[DeckMind] File parsing error:', err);
+      setError(err?.message || 'Failed to extract text from document. Please try again or load sample.');
       setIsParsing(false);
-      setDocument(null);
-      setDocumentAnalysis(null);
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'This document could not be read. Please try another file.'
-      );
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processFile(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      await processFile(file);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFile(e.target.files[0]);
+      const file = e.target.files[0];
+      await processFile(file);
     }
   };
 
-  const handleRemoveFile = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleRemoveFile = () => {
     setDocument(null);
     setDocumentAnalysis(null);
     setError(null);
@@ -196,7 +187,7 @@ export function UploadDropzone() {
 
       {/* Mode Switcher Tabs */}
       {!documentAnalysis && !isParsing && (
-        <div className="flex items-center p-1 bg-slate-100 rounded-2xl w-fit mx-auto border border-slate-200">
+        <div className="flex items-center p-1 bg-white/80 rounded-2xl w-fit mx-auto border border-slate-200/80 shadow-xs backdrop-blur-sm">
           <button
             type="button"
             onClick={() => {
@@ -205,11 +196,11 @@ export function UploadDropzone() {
             }}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               mode === 'upload'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-slate-950 shadow-md border border-slate-200/80'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
-            <FileUp className="h-4 w-4 text-indigo-600" />
+            <FileUp className={`h-4 w-4 ${mode === 'upload' ? 'text-blue-600' : 'text-slate-400'}`} />
             <span>Upload Document (PDF / DOCX)</span>
           </button>
           <button
@@ -220,11 +211,11 @@ export function UploadDropzone() {
             }}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               mode === 'prompt'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-blue-600 via-violet-600 to-fuchsia-500 text-white shadow-md shadow-violet-500/20'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
-            <Sparkles className="h-4 w-4 text-indigo-600" />
+            <Sparkles className={`h-4 w-4 ${mode === 'prompt' ? 'text-white' : 'text-purple-600'}`} />
             <span>Generate with AI Prompt</span>
           </button>
         </div>
@@ -237,40 +228,40 @@ export function UploadDropzone() {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 bg-white ${
+          className={`group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 bg-white/90 backdrop-blur-sm ${
             isDragging
-              ? 'border-indigo-600 bg-indigo-50/50 ring-4 ring-indigo-100 scale-[1.01]'
-              : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50/60 shadow-xs'
+              ? 'border-blue-500 bg-blue-50/60 ring-4 ring-blue-100/70 scale-[1.01]'
+              : 'border-[#d9d3c7] hover:border-amber-400 hover:bg-amber-50/30 shadow-xs'
           }`}
         >
           <div
             className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-200 ${
               isDragging
-                ? 'bg-indigo-600 text-white scale-110 shadow-lg shadow-indigo-200'
-                : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200 group-hover:text-slate-900'
+                ? 'bg-gradient-to-tr from-blue-600 to-violet-600 text-white scale-110 shadow-lg shadow-violet-500/30'
+                : 'bg-amber-50 text-amber-700 group-hover:bg-gradient-to-tr group-hover:from-blue-600 group-hover:to-violet-600 group-hover:text-white group-hover:shadow-md border border-amber-200/70'
             }`}
           >
-            <FileUp className="h-8 w-8" />
+            <FileUp className="h-8 w-8 transition-transform group-hover:scale-105" />
           </div>
 
-          <h3 className="text-lg font-bold text-slate-900 mb-1">
+          <h3 className="text-xl font-extrabold text-slate-900 mb-1 tracking-tight">
             Drop your document here
           </h3>
 
           <p className="text-xs text-slate-500 mb-5 font-mono">
-            PDF or DOCX · Maximum 25 MB
+            PDF or DOCX · Maximum 25 MB · Confidential & Encrypted
           </p>
 
           <Button
             variant="secondary"
             size="sm"
-            className="border-slate-200 pointer-events-none group-hover:border-slate-300 shadow-xs"
+            className="border-slate-200 pointer-events-none group-hover:border-indigo-300 font-bold px-5 shadow-xs"
           >
             Browse files
           </Button>
 
           {error && (
-            <div className="mt-5 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-xs text-rose-700 border border-rose-200 max-w-md text-left">
+            <div className="mt-5 flex items-start gap-2.5 rounded-2xl bg-rose-50 p-3.5 text-xs text-rose-700 border border-rose-200 max-w-md text-left shadow-xs">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
               <div>
                 <span className="font-bold block">Notice:</span>
@@ -285,14 +276,17 @@ export function UploadDropzone() {
       {mode === 'prompt' && !documentAnalysis && !isParsing && (
         <form
           onSubmit={handlePromptSubmit}
-          className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-6"
+          className="rounded-3xl border border-slate-200/90 bg-white/90 backdrop-blur-sm p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden"
         >
+          {/* Top subtle glow line */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 rainbow-bar" />
+
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 shadow-xs">
                 <Wand2 className="h-4 w-4" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">
+              <h3 className="text-base font-bold text-slate-900 tracking-tight">
                 Describe the presentation you want to create
               </h3>
             </div>
@@ -303,7 +297,7 @@ export function UploadDropzone() {
 
           {/* Topic / Title Input */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
               Presentation Topic or Title <span className="text-rose-500">*</span>
             </label>
             <input
@@ -312,14 +306,14 @@ export function UploadDropzone() {
               value={promptTopic}
               onChange={e => setPromptTopic(e.target.value)}
               placeholder="e.g. Autonomous Quadcopter Navigation using Deep Learning & Visual SLAM"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50/50"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50/50 shadow-2xs font-medium"
             />
           </div>
 
           {/* Custom Prompt / Instructions Textarea */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
                 Key Points, Outline, or Custom Instructions (Optional)
               </label>
               <span className="text-[10px] text-slate-400 font-mono">Detailed outline</span>
@@ -329,14 +323,14 @@ export function UploadDropzone() {
               value={promptInstructions}
               onChange={e => setPromptInstructions(e.target.value)}
               placeholder="e.g. Include problem statement on sensor drift, ROS2 node architecture, latency benchmarks on Jetson Nano, and 4 questions examiners might ask during viva defense."
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50/50 leading-relaxed"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50/50 leading-relaxed shadow-2xs"
             />
           </div>
 
           {/* Prompt Preset Suggestions */}
           <div className="space-y-2">
-            <span className="text-[11px] font-mono text-slate-400 font-semibold block">
-              Quick Suggestions (Click to fill):
+            <span className="text-[11px] font-mono text-slate-400 font-bold block">
+              Quick Suggestions (Click to auto-populate):
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {promptSuggestions.map((s, idx) => (
@@ -347,7 +341,7 @@ export function UploadDropzone() {
                     setPromptTopic(s.topic);
                     setPromptInstructions(s.desc);
                   }}
-                  className="text-left p-2.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all text-xs group cursor-pointer"
+                  className="text-left p-3 rounded-2xl border border-slate-200/80 hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-xs transition-all text-xs group cursor-pointer bg-white"
                 >
                   <span className="font-bold text-slate-800 group-hover:text-indigo-600 block truncate">
                     {s.topic}
@@ -361,18 +355,18 @@ export function UploadDropzone() {
           </div>
 
           {/* Configuration Controls: Slide Count & Purpose */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-150">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Target Deck Size</label>
+              <label className="text-xs font-bold text-slate-700 font-mono">Target Deck Size</label>
               <div className="grid grid-cols-3 gap-2">
                 {[6, 10, 14].map(num => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => setPromptSlideCount(num)}
-                    className={`py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                    className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
                       promptSlideCount === num
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        ? 'bg-gradient-to-r from-blue-600 to-violet-600 text-white border-transparent shadow-xs'
                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
@@ -383,11 +377,11 @@ export function UploadDropzone() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Presentation Goal</label>
+              <label className="text-xs font-bold text-slate-700 font-mono">Presentation Goal</label>
               <select
                 value={promptPurpose}
                 onChange={e => setPromptPurpose(e.target.value as PresentationPurpose)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs"
               >
                 <option value="project_viva">Project Viva Defense (Academic)</option>
                 <option value="engineering_seminar">Engineering Seminar / Technical Talk</option>
@@ -408,7 +402,7 @@ export function UploadDropzone() {
             <button
               type="submit"
               disabled={isGeneratingPrompt}
-              className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 via-violet-600 to-fuchsia-500 hover:opacity-95 text-white font-bold text-sm rounded-2xl shadow-lg shadow-violet-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isGeneratingPrompt ? (
                 <>
@@ -429,8 +423,8 @@ export function UploadDropzone() {
 
       {/* ── State 2: Document Ingestion In Progress ───────────────── */}
       {isParsing && (
-        <div className="rounded-3xl border-2 border-indigo-600 bg-white p-12 text-center shadow-lg space-y-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <div className="rounded-3xl border-2 border-blue-400 bg-white/90 backdrop-blur-md p-12 text-center shadow-xl shadow-blue-500/10 space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-violet-600 text-white shadow-lg shadow-violet-500/25">
             <Loader2 className="h-7 w-7 animate-spin" />
           </div>
           <div className="space-y-1">
@@ -439,33 +433,35 @@ export function UploadDropzone() {
               DeckMind is extracting headings, paragraphs, and tables from every page...
             </p>
           </div>
-          <div className="w-56 mx-auto h-1.5 rounded-full bg-indigo-100 overflow-hidden">
-            <div className="h-full bg-indigo-600 animate-pulse w-4/5" />
+          <div className="w-56 mx-auto h-2 rounded-full bg-slate-100 overflow-hidden p-0.5">
+            <div className="h-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400 rounded-full animate-pulse w-4/5" />
           </div>
         </div>
       )}
 
       {/* ── State 3: Document or Prompt Ready ─────────────────────── */}
       {documentAnalysis && !isParsing && (
-        <div className="rounded-3xl border-2 border-indigo-600 bg-white p-6 sm:p-8 shadow-xl shadow-indigo-100/50 space-y-6">
+        <div className="rounded-3xl border-2 border-emerald-400 bg-white/95 backdrop-blur-md p-6 sm:p-8 shadow-xl shadow-emerald-500/10 space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1.5 rainbow-bar" />
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 shrink-0">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 shrink-0 shadow-xs">
                 <FileText className="h-7 w-7" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-base font-bold text-slate-900 truncate max-w-[280px] sm:max-w-md">
+                  <h4 className="text-base font-extrabold text-slate-900 truncate max-w-[280px] sm:max-w-md">
                     {documentAnalysis.title || documentAnalysis.fileName}
                   </h4>
-                  <Badge variant="indigo" className="uppercase text-[10px] font-mono">
+                  <Badge variant="indigo" className="uppercase text-[10px] font-mono font-bold">
                     {documentAnalysis.fileName.endsWith('.prompt') ? 'AI PROMPT' : documentAnalysis.fileType}
                   </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1">
                   <span>{formatFileSize(documentAnalysis.fileSize)}</span>
                   <span>•</span>
-                  <span>{documentAnalysis.sections.length} sections synthesized</span>
+                  <span className="text-indigo-600 font-semibold">{documentAnalysis.sections.length} sections synthesized</span>
                   <span>•</span>
                   <span>{documentAnalysis.pageCount} pages</span>
                 </div>
@@ -482,13 +478,13 @@ export function UploadDropzone() {
           </div>
 
           {/* Synthesized Sections Preview */}
-          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+          <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/30 border border-slate-200 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
                 Synthesized Outline & Sections ({documentAnalysis.sections.length})
               </span>
-              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Ready for Presentation Design
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                ✓ Ready for Presentation Design
               </span>
             </div>
 
@@ -496,11 +492,11 @@ export function UploadDropzone() {
               {documentAnalysis.sections.slice(0, 6).map((sec, i) => (
                 <div
                   key={sec.id || i}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200/80 text-slate-700 truncate"
+                  className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-700 truncate shadow-2xs"
                 >
                   <span className="h-2 w-2 rounded-full bg-indigo-500 shrink-0" />
-                  <span className="font-semibold text-slate-800 shrink-0">0{i + 1}.</span>
-                  <span className="truncate">{sec.title}</span>
+                  <span className="font-bold text-slate-800 shrink-0 font-mono">0{i + 1}.</span>
+                  <span className="truncate font-medium">{sec.title}</span>
                 </div>
               ))}
             </div>
@@ -514,7 +510,7 @@ export function UploadDropzone() {
               variant="accent"
               size="lg"
               onClick={() => router.push('/create')}
-              className="w-full sm:w-auto shadow-md shadow-indigo-600/20 gap-2 cursor-pointer font-bold"
+              className="w-full sm:w-auto shadow-lg shadow-violet-500/25 gap-2 cursor-pointer font-bold px-6 h-11"
             >
               <span>Choose Template Design</span>
               <ArrowRight className="h-4 w-4" />
@@ -525,12 +521,12 @@ export function UploadDropzone() {
 
       {/* Sample report fallback test helper */}
       {!documentAnalysis && !isParsing && mode === 'upload' && (
-        <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
-          <span>Want to test with a pre-parsed engineering report?</span>
+        <div className="p-4 rounded-2xl border border-slate-200/90 bg-white/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 shadow-2xs">
+          <span className="font-medium">Want to test right away with a pre-parsed engineering report?</span>
           <button
             type="button"
             onClick={loadSampleDocument}
-            className="text-indigo-600 font-bold hover:text-indigo-700 underline cursor-pointer"
+            className="text-indigo-600 font-bold hover:text-indigo-800 underline cursor-pointer bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200/60 shadow-2xs"
           >
             Load Sample Report (3.4 MB)
           </button>

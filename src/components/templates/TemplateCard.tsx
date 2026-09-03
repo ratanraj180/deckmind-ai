@@ -283,10 +283,10 @@ export function TemplateCard({ template, isSelected, onSelect }: TemplateCardPro
   return (
     <div
       onClick={() => onSelect(template)}
-      className={`group relative flex flex-col rounded-2xl border text-left transition-all duration-200 cursor-pointer overflow-hidden ${
+      className={`group relative flex flex-col rounded-3xl border text-left transition-all duration-200 cursor-pointer overflow-hidden ${
         isSelected
-          ? 'border-indigo-600 ring-2 ring-indigo-500 shadow-md bg-white'
-          : 'border-slate-200 hover:border-slate-300 hover:shadow-sm bg-white'
+          ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-md bg-white scale-[1.01]'
+          : 'border-slate-200/90 hover:border-indigo-300 hover:shadow-md bg-white'
       }`}
     >
       {/* Visual Canvas 16:9 Container */}
@@ -302,7 +302,7 @@ export function TemplateCard({ template, isSelected, onSelect }: TemplateCardPro
 
         {/* Selected Checkmark Badge */}
         {isSelected && (
-          <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md z-20">
+          <div className="absolute top-2.5 right-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-md z-20">
             <Check className="h-3 w-3 stroke-[3]" />
           </div>
         )}

@@ -22,42 +22,55 @@ if (!global.mongooseCache) {
 }
 
 /**
- * Connect to MongoDB Atlas with connection pooling and caching.
- * NEVER hardcodes credentials — reads process.env.MONGODB_URI at runtime.
+ * Connect to MongoDB with connection pooling, caching, and resilient fallback.
+ * 1. Attempts connection using process.env.MONGODB_URI.
+ * 2. If the primary connection fails (e.g. bad credentials, network timeout),
+ *    gracefully falls back to the local MongoDB instance (127.0.0.1:27017).
  */
 export async function connectToDatabase(): Promise<typeof mongoose> {
-  const uri = process.env.MONGODB_URI;
-
-  if (!uri) {
-    throw new Error(
-      '[DeckMind DB] MONGODB_URI is not defined in environment variables. Please check .env.local'
-    );
-  }
-
-  if (cached.conn) {
+  // If already connected and active, return immediately
+  if (cached.conn && cached.conn.connection && cached.conn.connection.readyState === 1) {
     return cached.conn;
   }
 
+  const primaryUri = process.env.MONGODB_URI;
+  const fallbackUri = process.env.MONGODB_LOCAL_URI || 'mongodb://127.0.0.1:27017/deckmind';
+
+  const connectOptions: mongoose.ConnectOptions = {
+    bufferCommands: false,
+    serverSelectionTimeoutMS: 3500,
+    maxPoolSize: 10,
+  };
+
   if (!cached.promise) {
-    const opts: mongoose.ConnectOptions = {
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 8000,
-      maxPoolSize: 10,
-    };
+    cached.promise = (async () => {
+      // 1. Try primary URI if provided
+      if (primaryUri) {
+        try {
+          console.log('[DeckMind DB] Connecting to primary MongoDB...');
+          const conn = await mongoose.connect(primaryUri, connectOptions);
+          console.log('[DeckMind DB] ✓ Connected to primary MongoDB successfully');
+          return conn;
+        } catch (primaryErr: any) {
+          console.warn(
+            `[DeckMind DB] ⚠ Primary MongoDB connection failed (${primaryErr?.message || 'Error'}). Checking fallback...`
+          );
+        }
+      }
 
-    console.log('[DeckMind DB] Initializing new MongoDB connection pool...');
-
-    cached.promise = mongoose
-      .connect(uri, opts)
-      .then(m => {
-        console.log('[DeckMind DB] ✓ Connected to MongoDB Atlas successfully');
-        return m;
-      })
-      .catch(err => {
-        cached.promise = null;
-        console.error('[DeckMind DB] ✗ MongoDB connection error:', err.message);
-        throw err;
-      });
+      // 2. Fallback to local MongoDB instance
+      try {
+        console.log(`[DeckMind DB] Connecting to fallback MongoDB (${fallbackUri})...`);
+        const fallbackConn = await mongoose.connect(fallbackUri, connectOptions);
+        console.log('[DeckMind DB] ✓ Connected to fallback local MongoDB successfully');
+        return fallbackConn;
+      } catch (fallbackErr: any) {
+        console.error('[DeckMind DB] ✗ Both primary and fallback MongoDB connections failed:', fallbackErr?.message);
+        throw new Error(
+          `Database connection failed. Primary: ${primaryUri ? 'failed' : 'not configured'}; Fallback (${fallbackUri}): ${fallbackErr?.message}`
+        );
+      }
+    })();
   }
 
   try {

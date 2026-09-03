@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, FastForward } from 'lucide-react';
+import { FileText, FastForward, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AIBrainRadar } from '@/components/processing/AIBrainRadar';
@@ -84,24 +84,28 @@ export default function ProcessingPage() {
   const displayTitle = documentAnalysis?.title || 'Document Presentation';
 
   return (
-    <div className="min-h-screen bg-[#fafafb] text-slate-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen mesh-canvas text-slate-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      {/* Aurora Ambient Mesh Background */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-indigo-500/10 blur-[130px] pointer-events-none -z-10" />
+      <div className="absolute top-1/2 right-1/4 w-[500px] h-[300px] bg-purple-500/10 blur-[120px] pointer-events-none -z-10" />
+
       {/* Top Header */}
-      <header className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6 border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100">
+      <header className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6 border-b border-slate-200/80">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-2xl brand-mark text-white shadow-md shadow-blue-500/20">
             <FileText className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-slate-900 truncate max-w-xs sm:max-w-md" title={displayName}>
+              <h1 className="text-sm font-bold text-slate-900 truncate max-w-xs sm:max-w-md tracking-tight" title={displayName}>
                 {displayName}
               </h1>
-              <Badge variant="indigo" className="text-[10px]">
+              <Badge variant="gradient" className="text-[10px] font-mono font-semibold">
                 {config.duration} • {config.purpose.replace('_', ' ')}
               </Badge>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 truncate max-w-md">
-              Synthesizing: {displayTitle}
+              Synthesizing: <span className="font-semibold text-slate-700">{displayTitle}</span>
             </p>
           </div>
         </div>
@@ -110,10 +114,10 @@ export default function ProcessingPage() {
           variant="outline"
           size="sm"
           onClick={handleSkip}
-          className="text-xs text-slate-500 hover:text-slate-900 cursor-pointer"
+          className="text-xs text-slate-600 hover:text-slate-900 cursor-pointer font-bold border-slate-200/90 bg-white/80 shadow-xs"
         >
           <span>Skip Animation</span>
-          <FastForward className="h-3.5 w-3.5 ml-1.5" />
+          <FastForward className="h-3.5 w-3.5 ml-1.5 text-indigo-600" />
         </Button>
       </header>
 
@@ -132,8 +136,9 @@ export default function ProcessingPage() {
       </main>
 
       {/* Bottom Footer Notice */}
-      <footer className="max-w-md mx-auto w-full text-center text-xs text-slate-400 py-4">
-        Applying {selectedTemplate.name} ({selectedTemplate.family.replace('_', ' ')}) layout engine...
+      <footer className="max-w-md mx-auto w-full text-center text-xs text-slate-400 py-4 flex items-center justify-center gap-2">
+        <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+        <span>Applying <span className="font-bold text-indigo-700">{selectedTemplate.name}</span> ({selectedTemplate.family.replace('_', ' ')}) layout engine...</span>
       </footer>
     </div>
   );

@@ -8,8 +8,13 @@
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --border: #e2e8f0;
-  --accent: #3b49df;
-  --accent-hover: #2f3ab2;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --g-blue: #3b82f6;
+  --g-red: #ef4444;
+  --g-yellow: #f59e0b;
+  --g-green: #10b981;
+  --g-violet: #8b5cf6;
 }
 
 html {
@@ -24,10 +29,118 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Crisp subtle scrollbar */
+/* Ambient colorful mesh used behind pages */
+.mesh-canvas {
+  background-color: #fafafb;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 12% -10%, rgba(99, 102, 241, 0.12), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 92% 0%, rgba(139, 92, 246, 0.1), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 70% 100%, rgba(6, 182, 212, 0.08), transparent 50%),
+    radial-gradient(ellipse 55% 35% at 8% 88%, rgba(236, 72, 153, 0.06), transparent 50%);
+}
+
+.mesh-canvas-dark {
+  background-color: #070a13;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 15% 0%, rgba(99, 102, 241, 0.22), transparent 55%),
+    radial-gradient(ellipse 55% 40% at 90% 10%, rgba(139, 92, 246, 0.18), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 80% 90%, rgba(6, 182, 212, 0.12), transparent 50%),
+    radial-gradient(ellipse 45% 35% at 10% 85%, rgba(236, 72, 153, 0.1), transparent 50%);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out 2s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* Glassmorphic utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-panel-dark {
+  background: rgba(12, 16, 32, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+/* Gradient Text Utilities */
+.gradient-text {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-vivid {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-mark {
+  background: conic-gradient(from 210deg, #6366f1, #8b5cf6, #06b6d4, #ec4899, #6366f1);
+}
+
+.surface-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 10px 28px -12px rgba(99, 102, 241, 0.12);
+}
+
+.surface-card:hover {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 16px 36px -12px rgba(99, 102, 241, 0.18);
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -41,4 +154,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+input, textarea, select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+@media (max-width: 767px) {
+  .hide-mobile {
+    display: none !important;
+  }
 }

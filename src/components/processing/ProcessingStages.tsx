@@ -70,7 +70,7 @@ export function ProcessingStages({ currentStageIndex }: ProcessingStagesProps) {
             key={stage.id}
             className={cn(
               'flex items-center gap-3.5 p-3 rounded-xl transition-all duration-300',
-              isCurrent && 'bg-white border border-indigo-200 shadow-sm scale-[1.01]',
+              isCurrent && 'bg-white border border-violet-200 shadow-sm scale-[1.01]',
               isCompleted && 'opacity-85 text-slate-700',
               isPending && 'opacity-40 text-slate-400'
             )}
@@ -80,7 +80,7 @@ export function ProcessingStages({ currentStageIndex }: ProcessingStagesProps) {
               className={cn(
                 'flex h-7 w-7 items-center justify-center rounded-full text-xs font-mono shrink-0 transition-colors',
                 isCompleted && 'bg-emerald-600 text-white shadow-xs',
-                isCurrent && 'bg-indigo-600 text-white animate-pulse shadow-xs ring-4 ring-indigo-100',
+                isCurrent && 'bg-gradient-to-br from-blue-600 to-violet-600 text-white animate-pulse shadow-xs ring-4 ring-violet-100',
                 isPending && 'border border-slate-200 bg-slate-50 text-slate-400'
               )}
             >

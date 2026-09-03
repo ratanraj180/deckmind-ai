@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   UploadedDocument,
   PresentationConfig,
@@ -37,6 +37,8 @@ interface PresentationContextType {
   selectRecentProject: (projectId: string) => void;
   generateProjectFromCurrentDocument: () => PresentationProject;
   loadSampleDocument: () => void;
+  /** True after client-side sessionStorage has been rehydrated into state. */
+  hydrated: boolean;
 }
 
 const PresentationContext = createContext<PresentationContextType | undefined>(undefined);
@@ -47,8 +49,8 @@ const STORAGE_KEY_ANALYSIS = 'deckmind_doc_analysis';
 const STORAGE_KEY_TEMPLATE = 'deckmind_selected_template_id';
 const STORAGE_KEY_PROJECT  = 'deckmind_active_project';
 
+// ── Storage helpers (only for post-mount reads & writes) ─────
 function safeGet<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
   try {
     const raw = sessionStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
@@ -58,7 +60,6 @@ function safeGet<T>(key: string, fallback: T): T {
 }
 
 function safeSet(key: string, value: unknown) {
-  if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem(key, JSON.stringify(value));
   } catch {
@@ -67,63 +68,89 @@ function safeSet(key: string, value: unknown) {
 }
 
 export function PresentationProvider({ children }: { children: React.ReactNode }) {
-  // ── Document metadata ──────────────────────────────────────
-  const [document, setDocumentState] = useState<UploadedDocument | null>(
-    () => safeGet<UploadedDocument | null>(STORAGE_KEY_DOC, null)
-  );
+  // ────────────────────────────────────────────────────────────
+  // All state initialised with DETERMINISTIC fallbacks so that
+  // server render and the client's first render pass produce
+  // identical output (no hydration mismatch).
+  // ────────────────────────────────────────────────────────────
 
-  // ── Real document analysis ─────────────────────────────────
-  const [documentAnalysis, setDocumentAnalysisState] = useState<DocumentAnalysis | null>(
-    () => safeGet<DocumentAnalysis | null>(STORAGE_KEY_ANALYSIS, null)
-  );
-
-  // ── Presentation configuration ─────────────────────────────
-  const [config, setConfig] = useState<PresentationConfig>(
-    () => safeGet<PresentationConfig>(STORAGE_KEY_CONFIG, DEFAULT_CONFIG)
-  );
-
-  // ── Selected template — stored as full object ──────────────
-  const [selectedTemplate, setSelectedTemplateState] = useState<PresentationTemplate>(() => {
-    if (typeof window === 'undefined') return PRESENTATION_TEMPLATES[0];
-    const savedFull = safeGet<PresentationTemplate | null>('deckmind_selected_template_full', null);
-    if (savedFull && savedFull.id && savedFull.palette) return savedFull;
-    const savedId = sessionStorage.getItem(STORAGE_KEY_TEMPLATE);
-    if (savedId) {
-      const found = PRESENTATION_TEMPLATES.find(t => t.id === savedId);
-      if (found) return found;
-    }
-    return PRESENTATION_TEMPLATES[0];
-  });
-
-  // ── Active project ─────────────────────────────────────────
-  const [activeProject, setActiveProjectState] = useState<PresentationProject>(
-    () => safeGet<PresentationProject>(STORAGE_KEY_PROJECT, MOCK_PROJECT)
-  );
-
+  const [document, setDocumentState] = useState<UploadedDocument | null>(null);
+  const [documentAnalysis, setDocumentAnalysisState] = useState<DocumentAnalysis | null>(null);
+  const [config, setConfig] = useState<PresentationConfig>(DEFAULT_CONFIG);
+  const [selectedTemplate, setSelectedTemplateState] = useState<PresentationTemplate>(PRESENTATION_TEMPLATES[0]);
+  const [activeProject, setActiveProjectState] = useState<PresentationProject>(MOCK_PROJECT);
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
   const [recentPresentations] = useState<PresentationProject[]>(RECENT_PRESENTATIONS);
 
-  // ── Sync to sessionStorage ─────────────────────────────────
+  // ── Hydration flag — flips to true once sessionStorage data
+  //    has been loaded into state (after mount).
+  const [hydrated, setHydrated] = useState(false);
+  // Guard to prevent sync-back effects from overwriting storage
+  // with fallback values before hydration has happened.
+  const hydrationDone = useRef(false);
+
+  // ────────────────────────────────────────────────────────────
+  // POST-MOUNT REHYDRATION
+  // Runs exactly once, reads sessionStorage, and batch-updates
+  // state so the second render reflects the persisted data.
+  // ────────────────────────────────────────────────────────────
   useEffect(() => {
+    const storedDoc = safeGet<UploadedDocument | null>(STORAGE_KEY_DOC, null);
+    const storedAnalysis = safeGet<DocumentAnalysis | null>(STORAGE_KEY_ANALYSIS, null);
+    const storedConfig = safeGet<PresentationConfig>(STORAGE_KEY_CONFIG, DEFAULT_CONFIG);
+    const storedProject = safeGet<PresentationProject>(STORAGE_KEY_PROJECT, MOCK_PROJECT);
+
+    // Template: try full object first, then ID lookup, then default
+    let storedTemplate: PresentationTemplate = PRESENTATION_TEMPLATES[0];
+    const savedFull = safeGet<PresentationTemplate | null>('deckmind_selected_template_full', null);
+    if (savedFull && savedFull.id && savedFull.palette) {
+      storedTemplate = savedFull;
+    } else {
+      const savedId = sessionStorage.getItem(STORAGE_KEY_TEMPLATE);
+      if (savedId) {
+        const found = PRESENTATION_TEMPLATES.find(t => t.id === savedId);
+        if (found) storedTemplate = found;
+      }
+    }
+
+    setDocumentState(storedDoc);
+    setDocumentAnalysisState(storedAnalysis);
+    setConfig(storedConfig);
+    setSelectedTemplateState(storedTemplate);
+    setActiveProjectState(storedProject);
+
+    hydrationDone.current = true;
+    setHydrated(true);
+  }, []); // runs once after mount
+
+  // ── Sync state back to sessionStorage (only after hydration) ──
+  useEffect(() => {
+    if (!hydrationDone.current) return;
     if (document) safeSet(STORAGE_KEY_DOC, document);
-    else sessionStorage.removeItem(STORAGE_KEY_DOC);
+    else { try { sessionStorage.removeItem(STORAGE_KEY_DOC); } catch {} }
   }, [document]);
 
   useEffect(() => {
+    if (!hydrationDone.current) return;
     if (documentAnalysis) safeSet(STORAGE_KEY_ANALYSIS, documentAnalysis);
-    else sessionStorage.removeItem(STORAGE_KEY_ANALYSIS);
+    else { try { sessionStorage.removeItem(STORAGE_KEY_ANALYSIS); } catch {} }
   }, [documentAnalysis]);
 
-  useEffect(() => { safeSet(STORAGE_KEY_CONFIG, config); }, [config]);
+  useEffect(() => {
+    if (!hydrationDone.current) return;
+    safeSet(STORAGE_KEY_CONFIG, config);
+  }, [config]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(STORAGE_KEY_TEMPLATE, selectedTemplate.id);
-      safeSet('deckmind_selected_template_full', selectedTemplate);
-    }
+    if (!hydrationDone.current) return;
+    sessionStorage.setItem(STORAGE_KEY_TEMPLATE, selectedTemplate.id);
+    safeSet('deckmind_selected_template_full', selectedTemplate);
   }, [selectedTemplate]);
 
-  useEffect(() => { safeSet(STORAGE_KEY_PROJECT, activeProject); }, [activeProject]);
+  useEffect(() => {
+    if (!hydrationDone.current) return;
+    safeSet(STORAGE_KEY_PROJECT, activeProject);
+  }, [activeProject]);
 
   // ── Actions ────────────────────────────────────────────────
   const setDocument = (doc: UploadedDocument | null) => setDocumentState(doc);
@@ -176,7 +203,6 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
   };
 
   // Single authoritative generation function
-  // Uses the current React state values (not closure-captured ones)
   const generateProjectFromCurrentDocument = useCallback((): PresentationProject => {
     const docToUse = documentAnalysis ?? createSampleDocumentAnalysis();
     const templateToUse = selectedTemplate;
@@ -233,6 +259,7 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
         selectRecentProject,
         generateProjectFromCurrentDocument,
         loadSampleDocument,
+        hydrated,
       }}
     >
       {children}

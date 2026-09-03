@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <body className="min-h-screen bg-[#fafafb] text-[#0f172a] selection:bg-indigo-100 selection:text-indigo-900">
+      <body className="min-h-screen mesh-canvas text-slate-900 selection:bg-indigo-500/20 selection:text-indigo-900">
         <AuthProvider>
           <PresentationProvider>{children}</PresentationProvider>
         </AuthProvider>
