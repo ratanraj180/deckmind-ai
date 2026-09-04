@@ -64,40 +64,76 @@ export async function POST(
     const safeTitle = title.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').slice(0, 50);
     const fileName = `${safeTitle || 'Presentation'}_DeckMind.pptx`;
 
-    // 3. Log download history and update presentation download count in MongoDB Atlas
+    // 3. Log download history and update user & presentation metrics in MongoDB
     try {
       const session = await getSession();
+      const userId = session?.user?.id;
       const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
       const userAgent = request.headers.get('user-agent') || 'unknown';
 
-      await db.downloadHistory.log({
+      // Check for rapid duplicate download triggers within a 5-second window
+      const fiveSecondsAgo = new Date(Date.now() - 5000);
+      const recentLog = await db.downloadHistory.count({
         presentationId: id,
-        userId: session?.user?.id,
-        fileName,
-        fileSize: pptxBuffer.length,
-        templateId,
-        templateFamily: templateSnapshot?.family,
-        ipAddress: ip,
-        userAgent,
-      });
+        ...(userId ? { userId } : { ipAddress: ip }),
+        downloadedAt: { $gte: fiveSecondsAgo },
+      }).catch(() => 0);
 
-      await db.presentation.upsert({
-        where: { id },
-        create: {
-          id,
-          title,
+      if (recentLog === 0) {
+        // Detect if presentation payment was simulated demo or gateway
+        const lastPayment = await db.payment.findFirst({
+          where: { presentationId: id, status: 'SUCCESSFUL' },
+        }).catch(() => null);
+
+        const isDemo = lastPayment?.isDemo === true || lastPayment?.provider === 'upi_demo';
+        const paymentMethod = lastPayment?.provider || 'direct';
+
+        await db.downloadHistory.log({
+          presentationId: id,
+          userId,
+          fileName,
+          fileSize: pptxBuffer.length,
           templateId,
-          downloadCount: 1,
-          lastDownloadedAt: new Date(),
-          status: 'DOWNLOADED',
-          slideCount: slides.length,
-        },
-        update: {
-          downloadCount: 1,
-          lastDownloadedAt: new Date(),
-          status: 'DOWNLOADED',
-        },
-      });
+          templateFamily: templateSnapshot?.family,
+          isDemo,
+          paymentMethod,
+          ipAddress: ip,
+          userAgent,
+        });
+
+        // Check if user previously downloaded this specific presentation
+        let isFirstTimeForUser = false;
+        if (userId) {
+          const prevUserDownloads = await db.downloadHistory.count({
+            presentationId: id,
+            userId,
+          }).catch(() => 0);
+          // If count was 1 (the one just inserted), this is their first time downloading this deck
+          isFirstTimeForUser = prevUserDownloads <= 1;
+          await db.user.incrementDownloadCount(userId, isFirstTimeForUser).catch(err =>
+            console.warn('[DeckMind Download] Could not update user download counts:', err?.message)
+          );
+        }
+
+        await db.presentation.upsert({
+          where: { id },
+          create: {
+            id,
+            userId: userId || undefined,
+            title,
+            templateId,
+            downloadCount: 1,
+            lastDownloadedAt: new Date(),
+            status: 'DOWNLOADED',
+            slideCount: slides.length,
+          },
+          update: {
+            $inc: { downloadCount: 1 },
+            lastDownloadedAt: new Date(),
+            status: 'DOWNLOADED',
+          },
+        });
+      }
     } catch (logErr) {
       console.warn('[DeckMind Download] Could not log download history to MongoDB:', logErr);
     }

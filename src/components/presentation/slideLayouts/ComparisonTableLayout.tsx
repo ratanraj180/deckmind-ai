@@ -7,13 +7,16 @@ export function ComparisonTableLayout({ slide, template }: SlideLayoutProps) {
   const pal = template.palette;
   const content = (slide.content || {}) as Record<string, any>;
   const isBrutalist = template.layoutFamily === 'brutalist' || template.layoutStyle === 'neo-brutalist';
+  const isEditorial = template.fontMood === 'editorial';
 
-  const rows = [
-    { dimension: 'Inference Latency', baseline: '1,250ms (Cloud roundtrip)', proposed: '42ms (Embedded edge FP16)', status: '30x Faster' },
-    { dimension: 'Network Dependency', baseline: 'Requires 24/7 internet link', proposed: 'Fully air-gapped autonomous', status: 'Offline Ready' },
-    { dimension: 'Privacy & Security', baseline: 'Biometrics streamed to cloud', proposed: 'On-device FAISS vector store', status: 'Zero-Trust' },
-    { dimension: 'Hardware BOM Cost', baseline: '$1,400+ dedicated server', proposed: '$180 edge single-board compute', status: '87% Savings' },
-  ];
+  const rows = Array.isArray(content.rows) && content.rows.length > 0
+    ? content.rows
+    : [
+        { dimension: '01. Execution Latency', baseline: 'Manual / High latency (2-5 sec)', proposed: 'Deterministic Real-Time (< 50ms)', status: '30x Faster' },
+        { dimension: '02. System Throughput', baseline: 'Single-thread bottleneck', proposed: 'Multi-stream concurrent pipeline', status: '4.8x Scale' },
+        { dimension: '03. Error Overhead', baseline: 'Heuristic drift / 12-15% variance', proposed: 'Calibrated algorithmic SLA (99.2%)', status: 'Zero-Drift' },
+        { dimension: '04. Operational Cost', baseline: 'High maintenance and manual oversight', proposed: 'Automated micro-architecture', status: '75% Savings' },
+      ];
 
   return (
     <div
@@ -30,7 +33,7 @@ export function ComparisonTableLayout({ slide, template }: SlideLayoutProps) {
             HEAD-TO-HEAD AUDIT
           </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: pal.primary }}>
+        <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isEditorial ? 'font-serif capitalize' : ''}`} style={{ color: pal.primary }}>
           {slide.title || 'Baseline vs Proposed Architecture'}
         </h2>
         {slide.subtitle && (
@@ -58,7 +61,7 @@ export function ComparisonTableLayout({ slide, template }: SlideLayoutProps) {
 
         {/* Table Rows */}
         <div className="flex-1 flex flex-col justify-between py-1">
-          {rows.map((r, idx) => (
+          {rows.slice(0, 4).map((r: any, idx: number) => (
             <div
               key={idx}
               className={`grid grid-cols-12 gap-2 items-center py-2 px-1 text-xs border-b last:border-0 ${
@@ -67,20 +70,17 @@ export function ComparisonTableLayout({ slide, template }: SlideLayoutProps) {
               style={{ borderColor: pal.border }}
             >
               <span className="col-span-3 font-bold truncate" style={{ color: pal.primary }}>
-                {r.dimension}
+                {r.dimension || r.aspect}
               </span>
-              <span className="col-span-4 text-[11px] opacity-70 truncate text-rose-700">
-                ✕ {r.baseline}
+              <span className="col-span-4 opacity-75 truncate text-[11px]">
+                {r.baseline || r.before}
               </span>
-              <div className="col-span-5 flex items-center justify-between gap-1">
-                <span className="text-[11px] font-bold text-emerald-600 truncate">
-                  ✓ {r.proposed}
+              <div className="col-span-5 flex items-center justify-between gap-2">
+                <span className="font-semibold truncate text-[11px]" style={{ color: pal.accent }}>
+                  {r.proposed || r.after}
                 </span>
-                <span
-                  className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase shrink-0 hidden sm:inline"
-                  style={{ backgroundColor: pal.accent + '15', color: pal.accent }}
-                >
-                  {r.status}
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                  {r.status || 'Verified'}
                 </span>
               </div>
             </div>
@@ -90,7 +90,7 @@ export function ComparisonTableLayout({ slide, template }: SlideLayoutProps) {
 
       {/* Slide Footer */}
       <div className={`flex items-center justify-between border-t pt-2 text-[9px] font-mono opacity-60 ${isBrutalist ? 'border-t-2 border-black' : ''}`} style={{ borderColor: pal.border }}>
-        <span>ARCHITECTURAL TRADE-OFF ANALYSIS</span>
+        <span>ARCHITECTURAL BENCHMARKING</span>
         <span>SLIDE {slide.slideNumber}</span>
       </div>
     </div>

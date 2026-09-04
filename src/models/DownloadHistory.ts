@@ -7,6 +7,8 @@ export interface IDownloadHistory extends Document {
   fileSize: number;
   templateId?: string;
   templateFamily?: string;
+  isDemo?: boolean;
+  paymentMethod?: string;
   downloadedAt: Date;
   ipAddress?: string;
   userAgent?: string;
@@ -39,6 +41,15 @@ const DownloadHistorySchema = new Schema<IDownloadHistory>(
     templateFamily: {
       type: String,
       default: null,
+    },
+    isDemo: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    paymentMethod: {
+      type: String,
+      default: 'razorpay',
     },
     downloadedAt: {
       type: Date,

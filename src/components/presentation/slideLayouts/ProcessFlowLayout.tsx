@@ -7,14 +7,15 @@ export function ProcessFlowLayout({ slide, template }: SlideLayoutProps) {
   const pal = template.palette;
   const content = (slide.content || {}) as Record<string, any>;
   const isBrutalist = template.layoutFamily === 'brutalist' || template.layoutStyle === 'neo-brutalist';
+  const isEditorial = template.fontMood === 'editorial';
 
   const steps = Array.isArray(content.steps) && content.steps.length > 0
     ? content.steps
     : [
-        { step: '01', name: 'Raw Capture', desc: 'RTSP optical frame stream ingestion at 30 FPS.', tech: 'OpenCV' },
-        { step: '02', name: 'Alignment', desc: 'Landmark detection and affine warping normalization.', tech: 'InsightFace' },
-        { step: '03', name: 'Inference', desc: 'Vector extraction and FAISS cosine distance comparison.', tech: 'TensorRT' },
-        { step: '04', name: 'Commit', desc: 'Timestamped write to SQLite audit log with cryptographic hash.', tech: 'FastAPI' },
+        { step: '01', name: 'Input Ingestion', desc: 'Captures raw input streams with zero memory buffer bloat.', tech: 'Stream Protocol' },
+        { step: '02', name: 'Feature Processing', desc: 'Executes transformation algorithms under deterministic SLAs.', tech: 'Core Transformation' },
+        { step: '03', name: 'Verification & Audit', desc: 'Validates integrity against target constraints and thresholds.', tech: 'Consistency Check' },
+        { step: '04', name: 'Atomic Commit', desc: 'Persists verified records and triggers downstream events.', tech: 'Atomic Output' },
       ];
 
   return (
@@ -32,7 +33,7 @@ export function ProcessFlowLayout({ slide, template }: SlideLayoutProps) {
             SEQUENTIAL STAGE PIPELINE
           </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: pal.primary }}>
+        <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isEditorial ? 'font-serif capitalize' : ''}`} style={{ color: pal.primary }}>
           {slide.title}
         </h2>
         {slide.subtitle && (
@@ -58,39 +59,25 @@ export function ProcessFlowLayout({ slide, template }: SlideLayoutProps) {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span
-                      className={`w-6 h-6 flex items-center justify-center font-mono font-bold text-xs ${
-                        isBrutalist ? 'border border-black bg-yellow-300 text-black' : 'rounded-full text-white'
+                      className={`text-[10px] font-mono font-black px-2 py-0.5 ${
+                        isBrutalist ? 'border border-black bg-yellow-300 text-black' : 'rounded'
                       }`}
-                      style={!isBrutalist ? { backgroundColor: pal.accent } : undefined}
+                      style={!isBrutalist ? { backgroundColor: pal.accent + '20', color: pal.accent } : undefined}
                     >
-                      {st.step || idx + 1}
+                      STAGE {st.step || `0${idx + 1}`}
                     </span>
-                    <span className="text-[9px] font-mono opacity-50 uppercase">STAGE</span>
+                    <span className="text-[8px] font-mono opacity-50 uppercase">
+                      {st.tech || 'CORE'}
+                    </span>
                   </div>
-
-                  <h4 className="text-xs sm:text-sm font-bold leading-tight" style={{ color: pal.primary }}>
+                  <h4 className={`text-xs sm:text-sm font-bold leading-tight ${isEditorial ? 'font-serif' : ''}`} style={{ color: pal.primary }}>
                     {st.name}
                   </h4>
-                  <p className="text-[11px] opacity-75 leading-relaxed">
+                  <p className="text-xs opacity-75 leading-relaxed">
                     {st.desc}
                   </p>
                 </div>
-
-                {st.tech && (
-                  <div className="pt-2 border-t border-current/10 mt-2">
-                    <span className="text-[9px] font-mono font-bold" style={{ color: pal.accent }}>
-                      ⚡ {st.tech}
-                    </span>
-                  </div>
-                )}
               </div>
-
-              {/* Arrow indicator between nodes (desktop) */}
-              {idx < 3 && (
-                <div className="hidden sm:block absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-xs font-mono font-bold opacity-60">
-                  →
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -98,7 +85,7 @@ export function ProcessFlowLayout({ slide, template }: SlideLayoutProps) {
 
       {/* Slide Footer */}
       <div className={`flex items-center justify-between border-t pt-2 text-[9px] font-mono opacity-60 ${isBrutalist ? 'border-t-2 border-black' : ''}`} style={{ borderColor: pal.border }}>
-        <span>FLOWCHART EXECUTION LIFECYCLE</span>
+        <span>EXECUTION LIFECYCLE AUDIT</span>
         <span>SLIDE {slide.slideNumber}</span>
       </div>
     </div>

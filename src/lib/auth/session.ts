@@ -27,13 +27,11 @@ export async function requireAuth() {
   return { session, response: null };
 }
 
-/**
- * Require admin role in an API route.
- */
 export async function requireAdmin() {
   const session = await auth();
   const role = (session?.user as { role?: string } | null)?.role;
-  if (!session?.user || role !== 'ADMIN') {
+  const isAdmin = role && String(role).toLowerCase() === 'admin';
+  if (!session?.user || !isAdmin) {
     return {
       session: null,
       response: NextResponse.json(

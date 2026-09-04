@@ -7,15 +7,20 @@ export function SolutionHeroLayout({ slide, template }: SlideLayoutProps) {
   const pal = template.palette;
   const content = (slide.content || {}) as Record<string, any>;
   const isBrutalist = template.layoutFamily === 'brutalist' || template.layoutStyle === 'neo-brutalist';
+  const isEditorial = template.fontMood === 'editorial';
 
   const pillars = Array.isArray(content.pillars) && content.pillars.length > 0
     ? content.pillars
     : Array.isArray(content.bullets) && content.bullets.length > 0
-    ? content.bullets.map((b: string, i: number) => ({ number: `0${i + 1}`, title: `Capability 0${i + 1}`, desc: b }))
+    ? content.bullets.map((b: string, i: number) => ({
+        number: `0${i + 1}`,
+        title: b.match(/\*\*([^*]+)\*\*/)?.[1] || `Core Capability 0${i + 1}`,
+        desc: b.replace(/^\*\*[^*]+\*\*:\s*/, ''),
+      }))
     : [
-        { number: '01', title: 'Decoupled Micro-Pipeline', desc: 'Asynchronous event streaming ensures sub-50ms latency.' },
-        { number: '02', title: 'Edge Hardware Acceleration', desc: 'Embedded FP16 TensorRT inference on low-power silicon.' },
-        { number: '03', title: 'Zero-Trust Telemetry Ledger', desc: 'Cryptographically signed audit logs with tamper resistance.' },
+        { number: '01', title: 'Decoupled Core Architecture', desc: 'Modular micro-architecture ensuring low latency and high stability.' },
+        { number: '02', title: 'Optimized Transformation Engine', desc: 'Streamlined processing pipeline executing under deterministic SLAs.' },
+        { number: '03', title: 'Verified Persistence & Delivery', desc: 'End-to-end telemetry and validation with zero single point of failure.' },
       ];
 
   return (
@@ -33,7 +38,7 @@ export function SolutionHeroLayout({ slide, template }: SlideLayoutProps) {
             PROPOSED BREAKTHROUGH
           </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: pal.primary }}>
+        <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isEditorial ? 'font-serif capitalize' : ''}`} style={{ color: pal.primary }}>
           {slide.title}
         </h2>
         {slide.subtitle && (
@@ -47,7 +52,7 @@ export function SolutionHeroLayout({ slide, template }: SlideLayoutProps) {
       <div
         className={`my-auto p-5 sm:p-6 flex flex-col justify-between ${
           isBrutalist
-            ? 'border-3 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
+            ? 'border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
             : 'rounded-2xl border'
         }`}
         style={!isBrutalist ? { backgroundColor: pal.cardBg, borderColor: pal.border } : undefined}
@@ -59,37 +64,45 @@ export function SolutionHeroLayout({ slide, template }: SlideLayoutProps) {
           >
             THE PROPOSED PARADIGM
           </span>
-          <h3 className="text-xl sm:text-2xl font-black tracking-tight" style={{ color: pal.primary }}>
-            Autonomous Edge Perception Engine
+          <h3 className={`text-lg sm:text-xl font-black ${isEditorial ? 'font-serif' : ''}`} style={{ color: pal.primary }}>
+            {slide.title}
           </h3>
-          <p className="text-xs sm:text-sm opacity-80 leading-relaxed font-medium">
-            Eliminating central cloud latency by decentralizing biometric verification and inference logic directly to embedded edge hardware nodes.
+          <p className="text-xs opacity-80 leading-relaxed max-w-xl mx-auto">
+            {slide.subtitle || 'Engineered to replace manual friction with an autonomous, high-throughput modular pipeline.'}
           </p>
         </div>
 
-        {/* 3 Core Capability Blocks Inside Solution Hero */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-current/10 mt-4">
-          {pillars.slice(0, 3).map((p: any, idx: number) => (
+        {/* 3 Core Solution Pillars */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t" style={{ borderColor: pal.border }}>
+          {pillars.slice(0, 3).map((pil: any, idx: number) => (
             <div
               key={idx}
-              className={`p-3 text-left ${
+              className={`p-3.5 flex flex-col justify-between transition-all ${
                 isBrutalist
                   ? 'border border-black bg-slate-50'
                   : 'rounded-xl border'
               }`}
               style={!isBrutalist ? { backgroundColor: pal.background, borderColor: pal.border } : undefined}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] font-mono font-bold" style={{ color: pal.accent }}>
-                  0{idx + 1}
-                </span>
-                <h4 className="text-xs font-bold truncate" style={{ color: pal.primary }}>
-                  {p.title}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`text-[10px] font-mono font-black px-2 py-0.5 ${
+                      isBrutalist ? 'border border-black bg-emerald-400 text-black' : 'rounded'
+                    }`}
+                    style={!isBrutalist ? { backgroundColor: pal.accent + '20', color: pal.accent } : undefined}
+                  >
+                    {pil.number || `0${idx + 1}`}
+                  </span>
+                  <span className="text-[8px] font-mono opacity-50 uppercase">PILLAR</span>
+                </div>
+                <h4 className={`text-xs font-bold leading-tight pt-1 ${isEditorial ? 'font-serif' : ''}`} style={{ color: pal.primary }}>
+                  {pil.title}
                 </h4>
+                <p className="text-[11px] opacity-75 leading-relaxed">
+                  {pil.desc}
+                </p>
               </div>
-              <p className="text-[11px] opacity-75 line-clamp-2 leading-relaxed">
-                {p.desc}
-              </p>
             </div>
           ))}
         </div>
@@ -97,7 +110,7 @@ export function SolutionHeroLayout({ slide, template }: SlideLayoutProps) {
 
       {/* Slide Footer */}
       <div className={`flex items-center justify-between border-t pt-2 text-[9px] font-mono opacity-60 ${isBrutalist ? 'border-t-2 border-black' : ''}`} style={{ borderColor: pal.border }}>
-        <span>SOLUTION SPECIFICATION</span>
+        <span>SOLUTION SPECIFICATION & VALUE PROPOSITION</span>
         <span>SLIDE {slide.slideNumber}</span>
       </div>
     </div>

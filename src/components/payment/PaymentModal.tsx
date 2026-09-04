@@ -19,6 +19,11 @@ import {
   QrCode,
   Smartphone,
   ArrowRight,
+  Timer,
+  Zap,
+  Radio,
+  Shield,
+  AlertCircle,
 } from 'lucide-react';
 import { usePresentation } from '@/context/PresentationContext';
 
@@ -47,6 +52,11 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'upi_qr' | 'gateway'>('upi_qr');
 
+  // Demo Payment Simulation State (90-second countdown flow)
+  const [isDemoSimulating, setIsDemoSimulating] = useState(false);
+  const [demoCountdown, setDemoCountdown] = useState(90);
+  const [demoStepStatus, setDemoStepStatus] = useState<'IDLE' | 'PROCESSING' | 'CONFIRMING' | 'VERIFYING' | 'COMPLETED'>('IDLE');
+
   useEffect(() => {
     if (!isOpen) {
       setError(null);
@@ -54,8 +64,37 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
       setIsSuccess(false);
       setPaymentId(null);
       setSelectedPaymentMethod('upi_qr');
+      setIsDemoSimulating(false);
+      setDemoCountdown(90);
+      setDemoStepStatus('IDLE');
     }
   }, [isOpen]);
+
+  // Handle demo countdown & automatic completion at 0s
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (isDemoSimulating && demoCountdown > 0) {
+      timer = setInterval(() => {
+        setDemoCountdown(prev => {
+          const next = prev - 1;
+          if (next > 55) {
+            setDemoStepStatus('PROCESSING');
+          } else if (next > 20) {
+            setDemoStepStatus('CONFIRMING');
+          } else if (next > 0) {
+            setDemoStepStatus('VERIFYING');
+          }
+          return next;
+        });
+      }, 1000);
+    } else if (isDemoSimulating && demoCountdown === 0) {
+      setDemoStepStatus('COMPLETED');
+      completeDemoSimulation();
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isDemoSimulating, demoCountdown]);
 
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise(resolve => {
@@ -186,8 +225,18 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     }
   };
 
-  const handleUpiPaymentCompleted = () => {
-    // Require Authentication
+  const startUpiDemoSimulation = () => {
+    if (authStatus !== 'authenticated' || !session?.user) {
+      router.push('/login?callbackUrl=/presentation');
+      return;
+    }
+    setError(null);
+    setIsDemoSimulating(true);
+    setDemoCountdown(90);
+    setDemoStepStatus('PROCESSING');
+  };
+
+  const completeDemoSimulation = async () => {
     if (authStatus !== 'authenticated' || !session?.user) {
       router.push('/login?callbackUrl=/presentation');
       return;
@@ -195,16 +244,44 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
 
     setIsLoading(true);
     setError(null);
-    const refId = 'UPI-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+    const refId = 'UPI-DEMO-' + Math.random().toString(36).substring(2, 9).toUpperCase();
     setPaymentId(refId);
 
+    try {
+      // Record simulated payment attempt in MongoDB for analytics
+      await fetch('/api/payments/demo-confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          presentationId: activeProject.id,
+          referenceId: refId,
+        }),
+      }).catch(err => {
+        console.warn('[DeckMind Payment] Demo payment API notice:', err);
+      });
+    } catch (e) {
+      console.warn('[DeckMind Payment] Recording demo notice:', e);
+    }
+
+    setIsLoading(false);
+    setIsSuccess(true);
     setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      setTimeout(() => {
-        onSuccess();
-      }, 1200);
-    }, 900);
+      onSuccess();
+    }, 1400);
+  };
+
+  const handleUpiPaymentCompleted = () => {
+    // Require Authentication
+    if (authStatus !== 'authenticated' || !session?.user) {
+      router.push('/login?callbackUrl=/presentation');
+      return;
+    }
+
+    if (!isDemoSimulating) {
+      startUpiDemoSimulation();
+    } else {
+      completeDemoSimulation();
+    }
   };
 
   if (!isOpen) return null;
@@ -243,16 +320,21 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
           {/* STATE 1: SUCCESS CONFIRMATION */}
           {isSuccess ? (
             <div className="text-center py-6 space-y-3">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+              <div className="w-16 h-16 bg-gradient-to-tr from-emerald-100 to-teal-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-emerald-200">
                 <CheckCircle2 className="h-8 w-8 animate-bounce" />
               </div>
-              <h3 className="text-xl font-extrabold text-slate-900">Payment Verified!</h3>
+              <div className="space-y-1">
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                  DEMO SIMULATION
+                </span>
+                <h3 className="text-xl font-black text-slate-900">Demo Payment Completed</h3>
+              </div>
               <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                Reference ID: <span className="font-mono font-bold text-slate-700">{paymentId}</span>
+                Simulation Reference: <span className="font-mono font-bold text-slate-700">{paymentId}</span>
               </p>
-              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center justify-center gap-2 shadow-xs">
+              <div className="p-3.5 bg-emerald-50/90 rounded-2xl border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center justify-center gap-2 shadow-xs">
                 <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
-                <span>Generating and downloading your PowerPoint (.pptx)...</span>
+                <span>Presentation unlocked! Preparing your PowerPoint (.pptx)...</span>
               </div>
             </div>
 
@@ -348,71 +430,169 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 </button>
               </div>
 
-              {/* ── OPTION A: UPI QR CODE SECTION ──────────────────────── */}
+              {/* ── OPTION A: UPI QR CODE SECTION (WITH DEMO SIMULATION FLOW) ── */}
               {selectedPaymentMethod === 'upi_qr' && (
                 <div className="space-y-4 pt-1">
-                  {/* UPI QR Display Card */}
-                  <div className="rounded-3xl border border-violet-200 bg-gradient-to-b from-violet-50/50 via-white to-amber-50/30 p-5 text-center shadow-lg shadow-violet-500/5 space-y-3 relative overflow-hidden">
-                    {/* Header */}
-                    <div className="space-y-1">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-xs font-bold text-indigo-700 font-mono">
-                        <Smartphone className="h-3.5 w-3.5 text-indigo-600" />
-                        <span>Scan & Pay ₹10 via UPI</span>
+                  {/* Demo Simulation Notice Banner */}
+                  <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
+                    <div className="p-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0 mt-0.5">
+                      <Radio className="h-3.5 w-3.5 animate-pulse text-amber-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <span>Demo Payment Simulation Mode</span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-200/70 text-amber-800">
+                          ₹10 Demo
+                        </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        Use Google Pay, PhonePe, Paytm, BHIM or any UPI app
+                      <p className="text-[11px] text-amber-800/80 mt-0.5 leading-relaxed">
+                        This is a simulated checkout flow for preview purposes. No real bank transfer is verified.
                       </p>
-                    </div>
-
-                    {/* QR Code Container */}
-                    <div className="relative mx-auto w-52 h-52 sm:w-56 sm:h-56 p-2 rounded-2xl bg-white border-2 border-slate-200 shadow-md flex items-center justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/upi-qr.jpg"
-                        alt="Scan & Pay ₹10 via UPI QR Code"
-                        className="w-full h-full object-contain rounded-xl"
-                      />
-                    </div>
-
-                    {/* Supported Apps Ticker */}
-                    <div className="pt-1 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-500">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
-                        GPay
-                      </span>
-                      <span>•</span>
-                      <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
-                        PhonePe
-                      </span>
-                      <span>•</span>
-                      <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
-                        Paytm
-                      </span>
-                      <span>•</span>
-                      <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
-                        BHIM
-                      </span>
                     </div>
                   </div>
 
-                  {/* Confirmation Button */}
-                  <div className="pt-1">
-                    <button
-                      onClick={handleUpiPaymentCompleted}
-                      disabled={isLoading}
-                      className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:opacity-95 active:scale-[0.98] text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Verifying Payment...</span>
-                        </>
+                  {/* UPI QR Display Card (Shown while countdown is active or before start, hidden once completed) */}
+                  {demoStepStatus !== 'COMPLETED' ? (
+                    <div className="rounded-3xl border border-violet-200 bg-gradient-to-b from-violet-50/50 via-white to-amber-50/30 p-5 text-center shadow-lg shadow-violet-500/5 space-y-3 relative overflow-hidden transition-all duration-300">
+                      {/* Header */}
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-xs font-bold text-indigo-700 font-mono">
+                          <Smartphone className="h-3.5 w-3.5 text-indigo-600" />
+                          <span>Scan & Pay ₹10 via UPI</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Use Google Pay, PhonePe, Paytm, BHIM or any UPI app
+                        </p>
+                      </div>
+
+                      {/* QR Code Container */}
+                      <div className="relative mx-auto w-48 h-48 sm:w-52 sm:h-52 p-2 rounded-2xl bg-white border-2 border-slate-200 shadow-md flex items-center justify-center group overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src="/upi-qr.jpg"
+                          alt="Scan & Pay ₹10 via UPI QR Code"
+                          className="w-full h-full object-contain rounded-xl transition-all duration-300"
+                        />
+
+                        {/* Scanner Laser Animation when Simulating */}
+                        {isDemoSimulating && (
+                          <div className="absolute inset-x-2 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-lg shadow-cyan-400/80 animate-[bounce_2.5s_infinite] pointer-events-none" />
+                        )}
+                      </div>
+
+                      {/* Live 90-Second Countdown & Animated Status Ticker */}
+                      {isDemoSimulating ? (
+                        <div className="space-y-2.5 pt-1">
+                          {/* Countdown Timer Badge */}
+                          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono text-xs font-bold shadow-2xs">
+                            <Timer className="h-4 w-4 animate-spin text-indigo-600" />
+                            <span>Simulation Timer: {demoCountdown}s remaining</span>
+                          </div>
+
+                          {/* Progress Bar (90s full) */}
+                          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 transition-all duration-1000 ease-linear rounded-full"
+                              style={{ width: `${Math.round(((90 - demoCountdown) / 90) * 100)}%` }}
+                            />
+                          </div>
+
+                          {/* Dynamic Animated Status Text */}
+                          <div className="p-2.5 rounded-xl bg-white/90 border border-slate-200/80 text-xs flex items-center justify-center gap-2 font-medium text-slate-700 shadow-2xs">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                            {demoStepStatus === 'PROCESSING' && (
+                              <span className="text-slate-800 font-semibold animate-pulse">
+                                Processing payment simulation...
+                              </span>
+                            )}
+                            {demoStepStatus === 'CONFIRMING' && (
+                              <span className="text-indigo-700 font-semibold animate-pulse">
+                                Waiting for confirmation from UPI network...
+                              </span>
+                            )}
+                            {demoStepStatus === 'VERIFYING' && (
+                              <span className="text-teal-700 font-semibold animate-pulse">
+                                Finalizing transaction authorization...
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       ) : (
-                        <>
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span>I Have Completed Payment</span>
-                        </>
+                        /* Supported Apps Ticker when not simulating */
+                        <div className="pt-1 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-500">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
+                            GPay
+                          </span>
+                          <span>•</span>
+                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
+                            PhonePe
+                          </span>
+                          <span>•</span>
+                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
+                            Paytm
+                          </span>
+                          <span>•</span>
+                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 font-semibold text-slate-700">
+                            BHIM
+                          </span>
+                        </div>
                       )}
-                    </button>
+                    </div>
+                  ) : (
+                    /* QR Code is HIDDEN when demo simulation is completed */
+                    <div className="rounded-3xl border border-emerald-200 bg-gradient-to-b from-emerald-50/70 to-teal-50/40 p-6 text-center space-y-3 shadow-lg shadow-emerald-500/5 animate-fade-in">
+                      <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-emerald-200">
+                        <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          COMPLETED
+                        </span>
+                        <h4 className="text-base font-extrabold text-slate-900">
+                          Demo Payment Completed
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          The PPT download button is now unlocked. You can download the file immediately.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="pt-1 space-y-2">
+                    {!isDemoSimulating ? (
+                      <button
+                        onClick={startUpiDemoSimulation}
+                        disabled={isLoading}
+                        className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 hover:opacity-95 active:scale-[0.98] text-white font-extrabold text-sm rounded-xl shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                      >
+                        <Timer className="h-4 w-4" />
+                        <span>Start 90s Demo Payment Simulation</span>
+                      </button>
+                    ) : demoCountdown > 0 ? (
+                      <div className="w-full py-3.5 px-4 bg-slate-100/90 border border-slate-200/90 rounded-xl text-slate-600 text-xs font-semibold flex items-center justify-center gap-2 shadow-inner select-none">
+                        <Lock className="h-4 w-4 text-amber-600 animate-pulse shrink-0" />
+                        <span>Verifying UPI network transaction ({demoCountdown}s remaining)...</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={completeDemoSimulation}
+                        disabled={isLoading}
+                        className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:opacity-95 active:scale-[0.98] text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Unlocking PPT Download...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span>I Have Completed Payment</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

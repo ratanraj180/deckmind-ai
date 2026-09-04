@@ -20,14 +20,18 @@ export class DocumentParserFactory {
   }
 
   public static validateFile(fileName: string, sizeBytes: number): void {
+    if (sizeBytes <= 0) {
+      throw new Error('The uploaded file is empty. Please upload a valid PDF or Word document.');
+    }
+
     const maxBytes = 25 * 1024 * 1024; // 25 MB
     if (sizeBytes > maxBytes) {
       throw new Error('File size exceeds the 25 MB limit.');
     }
 
     const ext = fileName.split('.').pop()?.toLowerCase();
-    if (!ext || !['pdf', 'docx', 'doc'].includes(ext)) {
-      throw new Error('Unsupported file format. Please upload a PDF or DOCX file.');
+    if (!ext || !['pdf', 'docx'].includes(ext)) {
+      throw new Error('Unsupported file format. Please upload a PDF (.pdf) or Word document (.docx).');
     }
   }
 }

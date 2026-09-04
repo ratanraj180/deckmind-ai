@@ -7,14 +7,15 @@ export function TechEcosystemLayout({ slide, template }: SlideLayoutProps) {
   const pal = template.palette;
   const content = (slide.content || {}) as Record<string, any>;
   const isBrutalist = template.layoutFamily === 'brutalist' || template.layoutStyle === 'neo-brutalist';
+  const isEditorial = template.fontMood === 'editorial';
 
   const items = Array.isArray(content.items) && content.items.length > 0
     ? content.items
     : [
-        { component: 'Compute Engine', spec: 'NVIDIA Jetson Nano 4GB (128-core Maxwell GPU)', cost: '$99' },
-        { component: 'Optical Sensor', spec: 'Sony IMX335 5MP WDR Camera with Low-Light HDR', cost: '$32' },
-        { component: 'Neural Runtime', spec: 'TensorRT 8.5 FP16 Engine with CUDA Graph execution', cost: 'Open Source' },
-        { component: 'Persistence Store', spec: 'SQLite 3.42 with WAL mode & AES-256 local encryption', cost: 'Embedded' },
+        { component: 'Core Compute Layer', spec: 'High-throughput execution engine with memory-mapped caching', cost: 'Optimized' },
+        { component: 'Ingestion & Telemetry', spec: 'Low-latency optical / stream sensors with adaptive calibration', cost: 'Hardware Verified' },
+        { component: 'Processing Runtime', spec: 'Precision execution engine with sub-linear matching lookup', cost: 'Production Ready' },
+        { component: 'Storage & Ledger', spec: 'Encrypted persistence store with local WAL sync & replication', cost: 'Embedded' },
       ];
 
   return (
@@ -32,7 +33,7 @@ export function TechEcosystemLayout({ slide, template }: SlideLayoutProps) {
             SPECIFICATION MATRIX
           </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: pal.primary }}>
+        <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isEditorial ? 'font-serif capitalize' : ''}`} style={{ color: pal.primary }}>
           {slide.title}
         </h2>
         {slide.subtitle && (
@@ -57,26 +58,18 @@ export function TechEcosystemLayout({ slide, template }: SlideLayoutProps) {
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-mono font-bold uppercase opacity-50">
-                  QUADRANT 0{idx + 1}
+                  QUADRANT 0${idx + 1}
                 </span>
-                <span
-                  className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded"
-                  style={{ backgroundColor: pal.accent + '15', color: pal.accent }}
-                >
-                  {it.cost || 'ACTIVE'}
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase" style={{ backgroundColor: pal.background, color: pal.accent }}>
+                  {it.cost || 'Verified'}
                 </span>
               </div>
-              <h4 className="text-sm font-bold leading-tight" style={{ color: pal.primary }}>
+              <h4 className={`text-xs sm:text-sm font-bold leading-tight ${isEditorial ? 'font-serif' : ''}`} style={{ color: pal.primary }}>
                 {it.component}
               </h4>
-              <p className="text-xs opacity-75 leading-relaxed font-mono">
+              <p className="text-xs opacity-75 leading-relaxed pt-1">
                 {it.spec}
               </p>
-            </div>
-
-            <div className="pt-2 border-t border-current/10 mt-2 flex items-center justify-between text-[9px] opacity-60 font-mono">
-              <span>HARDWARE TIER</span>
-              <span>CERTIFIED COMPATIBLE</span>
             </div>
           </div>
         ))}
@@ -84,7 +77,7 @@ export function TechEcosystemLayout({ slide, template }: SlideLayoutProps) {
 
       {/* Slide Footer */}
       <div className={`flex items-center justify-between border-t pt-2 text-[9px] font-mono opacity-60 ${isBrutalist ? 'border-t-2 border-black' : ''}`} style={{ borderColor: pal.border }}>
-        <span>ECOSYSTEM BOM ARCHITECTURE</span>
+        <span>HARDWARE & SYSTEM SPECIFICATIONS</span>
         <span>SLIDE {slide.slideNumber}</span>
       </div>
     </div>

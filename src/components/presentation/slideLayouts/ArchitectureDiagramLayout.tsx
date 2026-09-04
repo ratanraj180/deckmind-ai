@@ -7,14 +7,15 @@ export function ArchitectureDiagramLayout({ slide, template }: SlideLayoutProps)
   const pal = template.palette;
   const content = (slide.content || {}) as Record<string, any>;
   const isBrutalist = template.layoutFamily === 'brutalist' || template.layoutStyle === 'neo-brutalist';
+  const isEditorial = template.fontMood === 'editorial';
 
   const layers = Array.isArray(content.layers) && content.layers.length > 0
     ? content.layers
     : [
-        { node: 'Tier 1: Camera Stream Ingestion', details: 'Hardware GPU H.264 decoding with zero memory buffer copies.', type: 'Ingestion Layer' },
-        { node: 'Tier 2: Neural Inference Core', details: 'Embedded PyTorch model execution optimized via TensorRT FP16.', type: 'Compute Core' },
-        { node: 'Tier 3: FAISS Vector Indexing', details: 'Sub-millisecond Euclidean similarity lookup across 10k gallery.', type: 'Vector Database' },
-        { node: 'Tier 4: Transactional SQLite Ledger', details: 'Tamper-resistant local storage with background cloud sync.', type: 'Persistence Layer' },
+        { node: 'Tier 1: Ingestion Gateway', details: 'Hardware-accelerated input stream capture with zero-copy buffers.', type: 'Ingestion Layer' },
+        { node: 'Tier 2: Analytical Core', details: 'Embedded inference engine optimized for low latency and high accuracy.', type: 'Compute Core' },
+        { node: 'Tier 3: Persistence Store', details: 'Encrypted storage with transactional indexing and integrity verification.', type: 'Vector Database' },
+        { node: 'Tier 4: Service Delivery', details: 'Decoupled API gateway providing authenticated client presentation.', type: 'Persistence Layer' },
       ];
 
   return (
@@ -32,7 +33,7 @@ export function ArchitectureDiagramLayout({ slide, template }: SlideLayoutProps)
             4-TIER TOPOLOGY
           </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: pal.primary }}>
+        <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isEditorial ? 'font-serif capitalize' : ''}`} style={{ color: pal.primary }}>
           {slide.title}
         </h2>
         {slide.subtitle && (
@@ -62,25 +63,22 @@ export function ArchitectureDiagramLayout({ slide, template }: SlideLayoutProps)
                   }`}
                   style={!isBrutalist ? { backgroundColor: pal.accent + '20', color: pal.accent } : undefined}
                 >
-                  TIER 0{idx + 1}
+                  {l.name || `TIER 0${idx + 1}`}
                 </span>
                 <div className="min-w-0">
-                  <h4 className="text-xs sm:text-sm font-bold truncate" style={{ color: pal.primary }}>
-                    {l.node || l.name}
+                  <h4 className={`text-xs sm:text-sm font-bold truncate ${isEditorial ? 'font-serif' : ''}`} style={{ color: pal.primary }}>
+                    {l.node}
                   </h4>
                   <p className="text-[11px] opacity-75 truncate">{l.details}</p>
                 </div>
               </div>
 
-              <span
-                className="text-[9px] font-mono px-2 py-0.5 rounded border uppercase shrink-0 hidden sm:inline"
-                style={{ backgroundColor: pal.background, borderColor: pal.border, color: pal.accent }}
-              >
-                {l.type || 'ACTIVE MODULE'}
+              <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded border hidden sm:inline shrink-0" style={{ borderColor: pal.border, color: pal.accent }}>
+                {l.type || 'SYSTEM NODE'}
               </span>
             </div>
 
-            {/* Vertical Flow Connector */}
+            {/* Connecting Chevron/Arrow (between tiers) */}
             {idx < 3 && (
               <div className="h-2 w-0.5 my-0.5 opacity-40" style={{ backgroundColor: pal.accent }} />
             )}
@@ -90,7 +88,7 @@ export function ArchitectureDiagramLayout({ slide, template }: SlideLayoutProps)
 
       {/* Slide Footer */}
       <div className={`flex items-center justify-between border-t pt-2 text-[9px] font-mono opacity-60 ${isBrutalist ? 'border-t-2 border-black' : ''}`} style={{ borderColor: pal.border }}>
-        <span>MODULAR COMPONENT ARCHITECTURE</span>
+        <span>MULTI-TIER ARCHITECTURAL SPECIFICATION</span>
         <span>SLIDE {slide.slideNumber}</span>
       </div>
     </div>

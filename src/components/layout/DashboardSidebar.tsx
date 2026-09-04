@@ -13,6 +13,7 @@ import {
   HelpCircle,
   LogOut,
   GraduationCap,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -83,6 +84,24 @@ export function DashboardSidebar() {
               Live
             </Badge>
           </Link>
+          {String((session?.user as any)?.role || '').toLowerCase() === 'admin' && (
+            <Link
+              href="/admin"
+              className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                pathname === '/admin'
+                  ? 'bg-gradient-to-r from-rose-50 to-red-50 text-rose-900 border border-rose-200/60 shadow-xs'
+                  : 'text-rose-700 hover:text-rose-900 hover:bg-rose-50/50'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="h-4 w-4 text-rose-600" />
+                <span>Admin Portal</span>
+              </div>
+              <Badge variant="outline" className="text-[9px] py-0 px-1.5 font-mono border-rose-200 text-rose-600 bg-rose-50">
+                Admin
+              </Badge>
+            </Link>
+          )}
         </div>
 
         {/* Recent Presentations List in Sidebar */}

@@ -27,10 +27,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Password must be at least 8 characters long.' }, { status: 400 });
     }
 
+    if (password.length > 128) {
+      return NextResponse.json({ success: false, error: 'Password must not exceed 128 characters.' }, { status: 400 });
+    }
+
     // 3. Sanitize Name (ensures non-empty string for Mongoose schema validation)
     const cleanName = (name && typeof name === 'string' && name.trim().length > 0)
-      ? name.trim()
-      : cleanEmail.split('@')[0];
+      ? name.trim().slice(0, 100)
+      : cleanEmail.split('@')[0].slice(0, 100);
 
     // 4. Check for duplicate account
     const existing = await db.user.findUnique({ where: { email: cleanEmail } });
@@ -50,7 +54,7 @@ export async function POST(request: NextRequest) {
         email: cleanEmail,
         name: cleanName,
         passwordHash,
-        role: 'USER',
+        role: 'user',
       },
     });
 
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error?.message ? `Registration failed: ${error.message}` : 'Registration failed. Please try again.',
+        error: 'Registration failed. Please check your details and try again.',
       },
       { status: 500 }
     );

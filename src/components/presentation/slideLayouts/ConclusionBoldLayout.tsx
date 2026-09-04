@@ -7,14 +7,17 @@ export function ConclusionBoldLayout({ slide, template }: SlideLayoutProps) {
   const pal = template.palette;
   const content = (slide.content || {}) as Record<string, any>;
   const isBrutalist = template.layoutFamily === 'brutalist' || template.layoutStyle === 'neo-brutalist';
+  const isEditorial = template.fontMood === 'editorial';
 
   const takeaways = Array.isArray(content.takeaways) && content.takeaways.length > 0
     ? content.takeaways
     : [
-        'Successfully engineered low-latency edge biometric verification pipeline achieving sub-50ms SLA.',
-        'Eliminated central server hardware dependency, reducing deployment BOM overhead by 87%.',
-        'Validated cryptographic audit trail with zero-knowledge tamper resistance under continuous operation.',
+        'Successfully engineered modular system architecture achieving deterministic target SLAs.',
+        'Eliminated legacy operational overhead, reducing complexity and manual intervention.',
+        'Empirically validated high reliability and scalability under live operational load.',
       ];
+
+  const recommendation = content.recommendation || 'Proceed with production deployment staging and continuous telemetry verification.';
 
   return (
     <div
@@ -31,7 +34,7 @@ export function ConclusionBoldLayout({ slide, template }: SlideLayoutProps) {
             DELIVERABLES VERIFIED
           </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: pal.primary }}>
+        <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isEditorial ? 'font-serif capitalize' : ''}`} style={{ color: pal.primary }}>
           {slide.title || 'Summary & Core Deliverables'}
         </h2>
         {slide.subtitle && (
@@ -60,26 +63,36 @@ export function ConclusionBoldLayout({ slide, template }: SlideLayoutProps) {
                 }`}
                 style={!isBrutalist ? { backgroundColor: pal.accent } : undefined}
               >
-                ✓
+                0${idx + 1}
               </span>
-              <p className="text-xs sm:text-sm font-bold leading-relaxed" style={{ color: pal.primary }}>
+              <p className={`text-xs sm:text-sm font-semibold leading-relaxed ${isEditorial ? 'font-serif' : ''}`} style={{ color: pal.primary }}>
                 {point}
               </p>
             </div>
-
-            <span
-              className="text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase shrink-0 hidden sm:inline"
-              style={{ backgroundColor: pal.background, color: pal.accent, border: `1px solid ${pal.border}` }}
-            >
-              CONTRIBUTION 0{idx + 1}
-            </span>
           </div>
         ))}
+
+        {/* Strategic Recommendation Callout */}
+        <div
+          className={`p-3.5 rounded-xl border flex items-center justify-between ${
+            isBrutalist ? 'border-2 border-black bg-amber-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : ''
+          }`}
+          style={!isBrutalist ? { backgroundColor: pal.cardBg, borderColor: pal.accent } : undefined}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              RECOMMENDATION
+            </span>
+            <span className="text-xs font-bold" style={{ color: pal.primary }}>
+              {recommendation}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Slide Footer */}
       <div className={`flex items-center justify-between border-t pt-2 text-[9px] font-mono opacity-60 ${isBrutalist ? 'border-t-2 border-black' : ''}`} style={{ borderColor: pal.border }}>
-        <span>PROJECT IMPACT & ARCHITECTURAL VERIFICATION</span>
+        <span>TECHNICAL DELIVERABLES & SYNTHESIS</span>
         <span>SLIDE {slide.slideNumber}</span>
       </div>
     </div>

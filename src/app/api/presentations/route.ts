@@ -10,15 +10,18 @@ export async function GET(request: NextRequest) {
     const session = await getSession();
     const userId = session?.user?.id;
 
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-
-    const filter: Record<string, any> = {};
-    if (userId) {
-      filter.userId = userId;
+    if (!userId) {
+      return NextResponse.json({
+        success: true,
+        presentations: [],
+      });
     }
 
-    const presentations = await Presentation.find(filter)
+    const { searchParams } = new URL(request.url);
+    const rawLimit = parseInt(searchParams.get('limit') || '20', 10);
+    const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 20 : rawLimit), 100);
+
+    const presentations = await Presentation.find({ userId })
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('[DeckMind API] Failed to fetch presentations:', error);
     return NextResponse.json(
-      { success: false, error: error?.message || 'Failed to fetch presentations' },
+      { success: false, error: 'Failed to fetch presentations' },
       { status: 500 }
     );
   }
@@ -62,6 +65,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Check if presentation existed before upserting to safely increment user presentation count
+    const existingDoc = await db.presentation.findUnique({ where: { id: project.id } }).catch(() => null);
 
     const saved = await db.presentation.upsert({
       where: { id: project.id },
@@ -88,6 +94,12 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       },
     });
+
+    if (!existingDoc && userId) {
+      db.user.incrementPresentationCount(userId).catch(err =>
+        console.warn('[DeckMind API] Could not increment presentation count for user:', err?.message)
+      );
+    }
 
     console.log(`[DeckMind DB] ✓ Presentation saved to MongoDB: "${project.title}" (${project.id})`);
 

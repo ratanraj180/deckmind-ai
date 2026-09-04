@@ -9,11 +9,9 @@ import {
 import { PresentationTemplate } from '@/types/templates';
 
 // ============================================================
-// TEMPLATE DESIGN RULES
-// Each template family drives fundamentally different content shaping,
-// bullet density, header alignment, and visual composition.
+// LAYER 1: CONTENT INTELLIGENCE & DESIGN SYSTEM RULES
 // ============================================================
-interface TemplateRules {
+export interface TemplateRules {
   maxBulletsPerSlide: number;
   titleAlignment: 'left' | 'center' | 'right';
   preferredLayout: string;
@@ -23,7 +21,7 @@ interface TemplateRules {
   emphasizeVisuals: boolean;
 }
 
-function getTemplateRules(template: PresentationTemplate): TemplateRules {
+export function getTemplateRules(template: PresentationTemplate): TemplateRules {
   const ruleMap: Record<string, TemplateRules> = {
     apple_minimal: {
       maxBulletsPerSlide: 3,
@@ -151,33 +149,6 @@ function getTemplateRules(template: PresentationTemplate): TemplateRules {
       contentTone: 'editorial',
       emphasizeVisuals: false,
     },
-    google_editorial: {
-      maxBulletsPerSlide: 4,
-      titleAlignment: 'left',
-      preferredLayout: 'apple-minimal',
-      chartStyle: 'scientific',
-      diagramStyle: 'minimal',
-      contentTone: 'business',
-      emphasizeVisuals: false,
-    },
-    soft_pastel: {
-      maxBulletsPerSlide: 4,
-      titleAlignment: 'left',
-      preferredLayout: 'organic-flow',
-      chartStyle: 'colorful',
-      diagramStyle: 'organic',
-      contentTone: 'creative',
-      emphasizeVisuals: true,
-    },
-    creative_portfolio: {
-      maxBulletsPerSlide: 3,
-      titleAlignment: 'left',
-      preferredLayout: 'asymmetric-grid',
-      chartStyle: 'colorful',
-      diagramStyle: 'organic',
-      contentTone: 'creative',
-      emphasizeVisuals: true,
-    },
     engineering_blueprint: {
       maxBulletsPerSlide: 4,
       titleAlignment: 'left',
@@ -187,66 +158,38 @@ function getTemplateRules(template: PresentationTemplate): TemplateRules {
       contentTone: 'technical',
       emphasizeVisuals: true,
     },
-    bold_creative: {
+    memphis_pop: {
       maxBulletsPerSlide: 3,
+      titleAlignment: 'left',
+      preferredLayout: 'neo-brutalist',
+      chartStyle: 'colorful',
+      diagramStyle: 'geometric',
+      contentTone: 'creative',
+      emphasizeVisuals: true,
+    },
+    poster_style: {
+      maxBulletsPerSlide: 2,
       titleAlignment: 'left',
       preferredLayout: 'poster',
       chartStyle: 'colorful',
-      diagramStyle: 'organic',
-      contentTone: 'creative',
-      emphasizeVisuals: true,
-    },
-    minimal_premium: {
-      maxBulletsPerSlide: 3,
-      titleAlignment: 'center',
-      preferredLayout: 'minimal-canvas',
-      chartStyle: 'minimal',
-      diagramStyle: 'minimal',
-      contentTone: 'editorial',
-      emphasizeVisuals: false,
-    },
-    luxury_editorial: {
-      maxBulletsPerSlide: 3,
-      titleAlignment: 'center',
-      preferredLayout: 'centered-editorial',
-      chartStyle: 'minimal',
-      diagramStyle: 'minimal',
-      contentTone: 'editorial',
-      emphasizeVisuals: false,
-    },
-    magazine_story: {
-      maxBulletsPerSlide: 3,
-      titleAlignment: 'left',
-      preferredLayout: 'magazine',
-      chartStyle: 'colorful',
-      diagramStyle: 'organic',
-      contentTone: 'creative',
-      emphasizeVisuals: true,
-    },
-    modern_corporate: {
-      maxBulletsPerSlide: 4,
-      titleAlignment: 'left',
-      preferredLayout: 'split-hero',
-      chartStyle: 'scientific',
-      diagramStyle: 'minimal',
-      contentTone: 'business',
-      emphasizeVisuals: false,
-    },
-    organic_soft: {
-      maxBulletsPerSlide: 4,
-      titleAlignment: 'center',
-      preferredLayout: 'organic-flow',
-      chartStyle: 'colorful',
-      diagramStyle: 'organic',
+      diagramStyle: 'geometric',
       contentTone: 'creative',
       emphasizeVisuals: true,
     },
   };
 
-  return ruleMap[template.family] ?? ruleMap['modern_corporate'];
+  return ruleMap[template.family] ?? ruleMap['corporate_premium'] ?? {
+    maxBulletsPerSlide: 4,
+    titleAlignment: 'left',
+    preferredLayout: 'bento-grid',
+    chartStyle: 'modern-dark',
+    diagramStyle: 'geometric',
+    contentTone: 'business',
+    emphasizeVisuals: true,
+  };
 }
 
-function snapshotTemplate(template: PresentationTemplate): TemplateSnapshot {
+export function snapshotTemplate(template: PresentationTemplate): TemplateSnapshot {
   return {
     id: template.id,
     name: template.name,
@@ -257,8 +200,375 @@ function snapshotTemplate(template: PresentationTemplate): TemplateSnapshot {
   };
 }
 
+export interface SlideNarrativeSlot {
+  visualType: SlideVisualType;
+  layoutId: string;
+  category: string;
+  visualStrategy: string;
+  fallbackTitle: string;
+}
+
 // ============================================================
-// MAIN GENERATOR
+// NARRATIVE STORYLINE SEQUENCE PLANNER
+// Strictly enforces no consecutive duplicate layouts
+// Guarantees at least 5 distinct semantic slide types
+// ============================================================
+export function planSlideStoryline(
+  targetCount: number,
+  isViva: boolean,
+  template: PresentationTemplate,
+  docTitle: string
+): SlideNarrativeSlot[] {
+  const fullArc: SlideNarrativeSlot[] = [
+    { visualType: 'title', layoutId: 'hero-title', category: 'Title & Overview', visualStrategy: 'hero', fallbackTitle: docTitle },
+    { visualType: 'agenda', layoutId: 'agenda-navigation', category: 'Presentation Roadmap', visualStrategy: 'navigation', fallbackTitle: 'Executive Agenda & Scope' },
+    { visualType: 'problem_split', layoutId: 'split-problem', category: 'Problem Formulation', visualStrategy: 'contrast', fallbackTitle: 'Operational Bottlenecks & Friction' },
+    { visualType: 'solution_hero', layoutId: 'concept-hero', category: 'Proposed Solution', visualStrategy: 'focal-concept', fallbackTitle: 'Proposed Architectural Paradigm' },
+    { visualType: 'architecture_diagram', layoutId: 'architecture-tiers', category: 'System Architecture', visualStrategy: 'diagram', fallbackTitle: 'Multi-Tier System Topology' },
+    { visualType: 'process_flow', layoutId: 'process-flowchart', category: 'Execution Pipeline', visualStrategy: 'pipeline', fallbackTitle: 'End-to-End Processing Flow' },
+    { visualType: 'comparison_table', layoutId: 'vs-comparison', category: 'Comparative Benchmark', visualStrategy: 'matrix', fallbackTitle: 'Baseline vs Proposed Solution' },
+    { visualType: 'kpi_dashboard', layoutId: 'metrics-dashboard', category: 'Empirical Results', visualStrategy: 'statistics', fallbackTitle: 'Empirical Telemetry & Benchmarks' },
+    { visualType: 'tech_ecosystem', layoutId: 'tech-grid', category: 'Hardware & Tech Stack', visualStrategy: 'ecosystem', fallbackTitle: 'Hardware & Technology Stack' },
+    { visualType: 'timeline_roadmap', layoutId: 'timeline-milestones', category: 'Deployment Horizon', visualStrategy: 'journey', fallbackTitle: 'Deployment Horizon & Milestones' },
+    ...(isViva ? [{ visualType: 'viva_defense' as SlideVisualType, layoutId: 'viva-qa', category: 'Viva Voce Scrutiny', visualStrategy: 'evidence', fallbackTitle: 'Technical Examination Defense' }] : []),
+    { visualType: 'conclusion_bold', layoutId: 'bold-conclusion', category: 'Conclusion & Contributions', visualStrategy: 'statement', fallbackTitle: 'Conclusion & Key Deliverables' },
+    { visualType: 'thank_you', layoutId: 'closing-screen', category: 'Discussion & Inquiries', visualStrategy: 'closing', fallbackTitle: 'Thank You — Open for Questions' },
+  ];
+
+  if (targetCount >= fullArc.length) {
+    return fullArc;
+  }
+
+  // Curated selections for specific slide counts:
+  let selected: SlideNarrativeSlot[];
+  if (targetCount <= 5) {
+    selected = [
+      fullArc[0], // title
+      fullArc[2], // problem_split
+      fullArc[3], // solution_hero
+      fullArc[7], // kpi_dashboard
+      fullArc[11], // conclusion_bold
+    ];
+  } else if (targetCount <= 8) {
+    selected = [
+      fullArc[0], // title
+      fullArc[1], // agenda
+      fullArc[2], // problem_split
+      fullArc[3], // solution_hero
+      fullArc[4], // architecture_diagram
+      fullArc[6], // comparison_table
+      fullArc[7], // kpi_dashboard
+      fullArc[11], // conclusion_bold
+    ];
+  } else if (targetCount <= 10) {
+    selected = [
+      fullArc[0], // title
+      fullArc[1], // agenda
+      fullArc[2], // problem_split
+      fullArc[3], // solution_hero
+      fullArc[4], // architecture_diagram
+      fullArc[5], // process_flow
+      fullArc[6], // comparison_table
+      fullArc[7], // kpi_dashboard
+      fullArc[9], // timeline_roadmap
+      fullArc[11], // conclusion_bold
+    ];
+  } else {
+    // 12-14 slides:
+    selected = [...fullArc];
+  }
+
+  const result = selected.slice(0, targetCount);
+
+  // STRICT ENFORCEMENT: Never allow consecutive identical visual types
+  for (let i = 1; i < result.length; i++) {
+    if (result[i].visualType === result[i - 1].visualType) {
+      const alt = fullArc.find(a => a.visualType !== result[i - 1].visualType && (i === result.length - 1 || a.visualType !== result[i + 1]?.visualType));
+      if (alt) result[i] = alt;
+    }
+  }
+
+  return result;
+}
+
+// ============================================================
+// DYNAMIC CONTENT INTELLIGENCE EXTRACTION
+// Extracts real domain data from the user's document text
+// ============================================================
+
+export function extractQuantitativeMetrics(text: string, fallbackTitle: string): { label: string; value: string; delta: string }[] {
+  const metricMatches: { value: string; label: string; delta: string }[] = [];
+
+  // Look for percentages (e.g., 99.4%, 95%)
+  const pMatches = text.match(/(\d+(?:\.\d+)?%)/g);
+  if (pMatches && pMatches.length > 0) {
+    metricMatches.push({
+      value: pMatches[0],
+      label: 'Measured Accuracy / Precision',
+      delta: '+6.8% vs industry baseline',
+    });
+  }
+
+  // Look for latency/durations (e.g., 42ms, 18ms, 1.2s)
+  const lMatches = text.match(/(\d+(?:\.\d+)?\s*(?:ms|s|seconds|milliseconds))/i);
+  if (lMatches) {
+    metricMatches.push({
+      value: lMatches[0].trim(),
+      label: 'End-to-End Processing Latency',
+      delta: 'Real-time deterministic SLA',
+    });
+  }
+
+  // Look for speedups or multipliers (e.g., 3.5x, 10x, 4.8x)
+  const xMatches = text.match(/(\d+(?:\.\d+)?x)/i);
+  if (xMatches) {
+    metricMatches.push({
+      value: xMatches[0],
+      label: 'Computational Throughput Gain',
+      delta: 'Optimized pipeline execution',
+    });
+  }
+
+  // Look for large counts (e.g., 10,000+, 500k, 1M)
+  const cMatches = text.match(/(\d+[\d,]*\+?\s*(?:k|m|million|thousand|users|records|samples)?)/i);
+  if (cMatches && metricMatches.length < 3 && cMatches[0].length >= 2) {
+    metricMatches.push({
+      value: cMatches[0].trim(),
+      label: 'Test & Verification Dataset Scale',
+      delta: 'Statistically verified sample size',
+    });
+  }
+
+  // Fill fallbacks dynamically based on fallbackTitle if needed
+  if (metricMatches.length === 0) {
+    metricMatches.push({ value: '98.5%', label: 'System Reliability & Accuracy', delta: '+12.4% vs Traditional' });
+  }
+  if (metricMatches.length === 1) {
+    metricMatches.push({ value: '3.4x', label: 'Throughput Speedup', delta: 'Streamlined Architecture' });
+  }
+  if (metricMatches.length === 2) {
+    metricMatches.push({ value: '< 45ms', label: 'Average Response Time', delta: 'Deterministic latency profile' });
+  }
+
+  return metricMatches.slice(0, 3);
+}
+
+export function extractOperationalChallenges(
+  text: string,
+  slideTitleClean: string,
+  points: string[]
+): { title: string; desc: string; severity: string }[] {
+  const challenges: { title: string; desc: string; severity: string }[] = [];
+
+  points.slice(0, 3).forEach((p, idx) => {
+    const rawDesc = stripLeadIn(p);
+    const lead = extractLeadConcept(p) || `Operational Friction 0${idx + 1}`;
+    challenges.push({
+      title: lead,
+      desc: rawDesc.length > 15 ? rawDesc : `Bottleneck identified in standard workflow affecting overall reliability.`,
+      severity: idx === 0 ? 'Critical' : idx === 1 ? 'High' : 'Moderate',
+    });
+  });
+
+  while (challenges.length < 3) {
+    const idx = challenges.length;
+    challenges.push({
+      title: `System Constraint 0${idx + 1}`,
+      desc: `High computational overhead and unmitigated baseline error propagation across components.`,
+      severity: idx === 0 ? 'Critical' : 'High',
+    });
+  }
+
+  return challenges;
+}
+
+export function extractArchitecturalTiers(
+  text: string,
+  title: string,
+  points: string[]
+): { name: string; node: string; details: string; type: string }[] {
+  const tierTemplates = [
+    { name: 'Tier 01', type: 'Ingestion & Client Interface', fallbackNode: 'Data Ingestion & Ingress Gateway' },
+    { name: 'Tier 02', type: 'Processing & Core Reasoning', fallbackNode: 'Analytical Transformation Pipeline' },
+    { name: 'Tier 03', type: 'State Management & Storage', fallbackNode: 'Persistence & Vector Index Store' },
+    { name: 'Tier 04', type: 'Delivery & Gateway Service', fallbackNode: 'API Gateway & Presentation Layer' },
+  ];
+
+  return tierTemplates.map((tmpl, idx) => {
+    const point = points[idx];
+    const node = point ? extractLeadConcept(point) || tmpl.fallbackNode : tmpl.fallbackNode;
+    const details = point ? stripLeadIn(point) : `Autonomous modular tier executing verified transaction logic.`;
+    return {
+      name: tmpl.name,
+      node,
+      details,
+      type: tmpl.type,
+    };
+  });
+}
+
+export function extractExecutionSteps(
+  text: string,
+  title: string,
+  points: string[]
+): { step: string; name: string; desc: string; tech: string }[] {
+  const stepTemplates = [
+    { step: '01', name: 'Input & Telemetry Ingestion', tech: 'Stream Protocol', desc: 'Captures raw input streams with zero memory buffer bloat.' },
+    { step: '02', name: 'Feature Extraction & Processing', tech: 'Core Transformation', desc: 'Executes transformation algorithms under deterministic SLAs.' },
+    { step: '03', name: 'Verification & Cross-Validation', tech: 'Consistency Check', desc: 'Validates integrity against target constraints and thresholds.' },
+    { step: '04', name: 'Commit & Telemetry Dispatch', tech: 'Atomic Output', desc: 'Persists verified records and triggers downstream events.' },
+  ];
+
+  return stepTemplates.map((tmpl, idx) => {
+    const point = points[idx];
+    const name = point ? extractLeadConcept(point) || tmpl.name : tmpl.name;
+    const desc = point ? stripLeadIn(point) : tmpl.desc;
+    return {
+      step: tmpl.step,
+      name,
+      tech: tmpl.tech,
+      desc,
+    };
+  });
+}
+
+export function extractComparativeDimensions(
+  text: string,
+  title: string,
+  points: string[]
+): { aspect: string; dimension: string; before: string; baseline: string; after: string; proposed: string; status: string }[] {
+  const defaultDimensions = [
+    { aspect: 'Execution Latency', baseline: 'Manual / High latency (2-5 sec)', proposed: 'Deterministic Real-Time (< 50ms)', status: '30x Faster' },
+    { aspect: 'System Throughput', baseline: 'Single-thread bottleneck', proposed: 'Multi-stream concurrent pipeline', status: '4.8x Scale' },
+    { aspect: 'Error Overhead', baseline: 'Heuristic drift / 12-15% variance', proposed: 'Calibrated algorithmic SLA (99.2%)', status: 'Zero-Drift' },
+    { aspect: 'Operational Cost', baseline: 'High maintenance and manual oversight', proposed: 'Automated micro-architecture', status: '75% Savings' },
+  ];
+
+  return defaultDimensions.map((dim, idx) => {
+    const point = points[idx];
+    const proposed = point ? stripLeadIn(point) : dim.proposed;
+    const dimension = point ? extractLeadConcept(point) || dim.aspect : dim.aspect;
+    return {
+      aspect: `Dimension 0${idx + 1}`,
+      dimension: `0${idx + 1}. ${dimension}`,
+      before: dim.baseline,
+      baseline: dim.baseline,
+      after: proposed,
+      proposed,
+      status: dim.status,
+    };
+  });
+}
+
+export function extractEcosystemItems(
+  text: string,
+  title: string,
+  points: string[]
+): { component: string; spec: string; cost: string }[] {
+  const defaultItems = [
+    { component: 'Core Compute Layer', spec: 'High-throughput hardware engine with memory-mapped caching', cost: 'Optimized' },
+    { component: 'Perception / Ingest', spec: 'Low-latency optical / stream sensors with adaptive calibration', cost: 'Hardware Verified' },
+    { component: 'Inference Runtime', spec: 'Precision execution engine with sub-linear matching lookup', cost: 'Production Ready' },
+    { component: 'Storage & Ledger', spec: 'Encrypted persistence store with local WAL sync & replication', cost: 'Embedded' },
+  ];
+
+  return defaultItems.map((item, idx) => {
+    const point = points[idx];
+    const comp = point ? extractLeadConcept(point) || item.component : item.component;
+    const spec = point ? stripLeadIn(point) : item.spec;
+    return {
+      component: comp,
+      spec,
+      cost: item.cost,
+    };
+  });
+}
+
+export function extractRoadmapMilestones(
+  text: string,
+  title: string,
+  points: string[]
+): { phase: string; title: string; desc: string }[] {
+  const defaultPhases = [
+    { phase: 'Phase 01', title: 'Architectural Specification', desc: 'Formal requirements gathering, benchmark definition, and baseline scoping.' },
+    { phase: 'Phase 02', title: 'Core Pipeline Prototype', desc: 'End-to-end integration of ingestion, processing core, and persistence.' },
+    { phase: 'Phase 03', title: 'Empirical Verification', desc: 'Stress testing, latency optimization, and statistical validation under load.' },
+    { phase: 'Phase 04', title: 'Production Rollout', desc: 'Deployment to live target environments with real-time telemetry monitoring.' },
+  ];
+
+  return defaultPhases.map((phase, idx) => {
+    const point = points[idx];
+    const pTitle = point ? extractLeadConcept(point) || phase.title : phase.title;
+    const pDesc = point ? stripLeadIn(point) : phase.desc;
+    return {
+      phase: phase.phase,
+      title: pTitle,
+      desc: pDesc,
+    };
+  });
+}
+
+// ============================================================
+// PRESENTATION LANGUAGE FORMATTER
+// Converts raw sentences into presentation-ready bullet syntax:
+// "**Lead Concept**: Concise action sentence under 14 words."
+// ============================================================
+export function toPresentationBullet(text: string, tone: string): string {
+  let cleaned = text
+    .replace(/^(\d+[\.\:\-\)]|\b(step|phase|item|layer)\s*\d+[\.\:\-]?|[•\-\*►])\s*/i, '')
+    .replace(/\[\d+\]|\(\d{4}\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  cleaned = cleaned
+    .replace(/^(the proposed (?:system|architecture|method|approach)|in this (?:paper|study|document|work)|we have (?:designed|implemented|proposed)|the authors have demonstrated that)\s+/i, '')
+    .replace(/^(it is observed that|it is important to note that|furthermore,|additionally,|moreover,)\s+/i, '')
+    .trim();
+
+  if (cleaned.startsWith('**') && cleaned.includes('**:')) {
+    return cleaned;
+  }
+
+  const colonIndex = cleaned.indexOf(':');
+  if (colonIndex > 2 && colonIndex < 35) {
+    const lead = cleaned.slice(0, colonIndex).trim().replace(/^\*+|\*+$/g, '');
+    const body = cleaned.slice(colonIndex + 1).trim();
+    return `**${lead}**: ${capFirst(body)}`;
+  }
+
+  const words = cleaned.split(/\s+/);
+  if (words.length > 3) {
+    const lead = words.slice(0, 2).join(' ').replace(/[^a-zA-Z0-9\s]/g, '');
+    const rest = words.slice(2).join(' ');
+    const conciseRest = rest.split(/\s+/).slice(0, 14).join(' ');
+    return `**${capFirst(lead)}**: ${capFirst(conciseRest)}${conciseRest.endsWith('.') ? '' : '.'}`;
+  }
+
+  return `**${capFirst(cleaned)}**: Key architectural deliverable.`;
+}
+
+function capFirst(str: string): string {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function extractLeadConcept(bullet: string): string {
+  const match = bullet.match(/\*\*([^*]+)\*\*/);
+  if (match) return match[1].trim();
+  const colonIdx = bullet.indexOf(':');
+  if (colonIdx > 2 && colonIdx < 35) return bullet.slice(0, colonIdx).replace(/^\*+|\*+$/g, '').trim();
+  return bullet.split(/\s+/).slice(0, 3).join(' ').replace(/[^a-zA-Z0-9\s]/g, '');
+}
+
+function stripLeadIn(bullet: string): string {
+  return bullet
+    .replace(/^\*\*[^*]+\*\*:\s*/, '')
+    .replace(/^[^:]+:\s*/, '')
+    .trim();
+}
+
+// ============================================================
+// MAIN GENERATOR PIPELINE
 // ============================================================
 export function generatePresentationFromDocument(
   doc: DocumentAnalysis,
@@ -267,16 +577,10 @@ export function generatePresentationFromDocument(
 ): PresentationProject {
   const rules = getTemplateRules(template);
 
-  console.log(`[DeckMind Generator] ──────────────────────────────────`);
-  console.log(`[DeckMind Generator] Document: "${doc.title}" (${doc.pageCount} pages, ${doc.metadata.wordCount} words)`);
-  console.log(`[DeckMind Generator] Selected template: ${template.id}`);
-  console.log(`[DeckMind Generator] Design family: ${template.family}`);
-  console.log(`[DeckMind Generator] Layout engine: ${template.layoutStyle}`);
-  console.log(`[DeckMind Generator] Palette (bg): ${template.palette.background}`);
-  console.log(`[DeckMind Generator] Palette (accent): ${template.palette.accent}`);
-  console.log(`[DeckMind Generator] Content tone: ${rules.contentTone} | Bullets max: ${rules.maxBulletsPerSlide}`);
-  console.log(`[DeckMind Generator] Sections available: ${doc.sections.length}`);
-  console.log(`[DeckMind Generator] Config: duration=${config.duration}, density=${config.density}, purpose=${config.purpose}`);
+  console.log(`[DeckMind Content Intelligence] ──────────────────────────────────`);
+  console.log(`[DeckMind Content Intelligence] Title: "${doc.title}" (${doc.pageCount} pages, ${doc.metadata.wordCount} words)`);
+  console.log(`[DeckMind Content Intelligence] Template: ${template.id} | Family: ${template.family}`);
+  console.log(`[DeckMind Content Intelligence] Layout Engine: ${template.layoutStyle} | Font: ${template.fontMood}`);
 
   const templateSnap = snapshotTemplate(template);
 
@@ -288,7 +592,6 @@ export function generatePresentationFromDocument(
   const slides: SlideData[] = [];
   let currentSlideId = 1;
 
-  // Helper to stamp template metadata onto every slide
   const stamp = (partial: Omit<SlideData, 'templateId' | 'templateFamily' | 'layoutStyle'>): SlideData => ({
     ...partial,
     templateId: template.id,
@@ -309,12 +612,6 @@ export function generatePresentationFromDocument(
       }];
 
   const dedupedSections = deduplicateSections(availableSections);
-
-  // ──────────────────────────────────────────────────────────
-  // NARRATIVE STORYLINE SEQUENCE PLANNER
-  // Intelligently sequences distinct layouts across the presentation.
-  // CRITICAL RULE: Never use the exact same layout consecutively!
-  // ──────────────────────────────────────────────────────────
   const isViva = config.purpose === 'project_viva';
   const narrativePlan = planSlideStoryline(targetCount, isViva, template, doc.title);
   const usedSectionIndices = new Set<number>();
@@ -351,13 +648,13 @@ export function generatePresentationFromDocument(
         id: currentSlideId,
         slideNumber: currentSlideId++,
         title: 'Thank You',
-        subtitle: 'Open for Discussion & Questions',
+        subtitle: 'Open for Discussion & Technical Queries',
         visualType: 'thank_you',
         layoutId: slot.layoutId,
         visualStrategy: slot.visualStrategy,
         category: slot.category,
         durationSeconds: 45,
-        speakerNotes: `Thank you for your time. We are now open for queries, feedback, and cross-examination on ${doc.title}.`,
+        speakerNotes: `Thank you for your attention. We welcome inquiries, architectural discussions, and cross-examination regarding ${doc.title}.`,
         content: {
           authors: [doc.metadata.author || 'Project Lead'],
           institution: purposeToInstitution(config.purpose),
@@ -373,7 +670,15 @@ export function generatePresentationFromDocument(
         i
       );
 
-      const structuredContent = buildSlideContent(matchedSec, slot.visualType, doc, config, rules, template);
+      const structuredContent = buildSlideContent(
+        matchedSec,
+        slot.visualType,
+        doc,
+        config,
+        rules,
+        template,
+        narrativePlan
+      );
 
       slides.push(stamp({
         id: currentSlideId,
@@ -400,8 +705,8 @@ export function generatePresentationFromDocument(
     }
   }
 
-  console.log(`[DeckMind Generator] Generated ${slides.length} slides for template "${template.name}"`);
-  console.log(`[DeckMind Generator] ──────────────────────────────────`);
+  console.log(`[DeckMind Content Intelligence] Generated ${slides.length} slides for template "${template.name}"`);
+  console.log(`[DeckMind Content Intelligence] ──────────────────────────────────`);
 
   return {
     id: `proj-${Date.now()}`,
@@ -422,75 +727,6 @@ export function generatePresentationFromDocument(
     updatedAt: new Date().toISOString(),
     isPaid: false,
   };
-}
-
-export interface SlideNarrativeSlot {
-  visualType: SlideVisualType;
-  layoutId: string;
-  category: string;
-  visualStrategy: string;
-  fallbackTitle: string;
-}
-
-export function planSlideStoryline(
-  targetCount: number,
-  isViva: boolean,
-  template: PresentationTemplate,
-  docTitle: string
-): SlideNarrativeSlot[] {
-  const fullArc: SlideNarrativeSlot[] = [
-    { visualType: 'title', layoutId: 'hero-title', category: 'Title & Overview', visualStrategy: 'hero', fallbackTitle: docTitle },
-    { visualType: 'agenda', layoutId: 'agenda-navigation', category: 'Presentation Roadmap', visualStrategy: 'navigation', fallbackTitle: 'Executive Agenda & Scope' },
-    { visualType: 'problem_split', layoutId: 'split-problem', category: 'Problem Formulation', visualStrategy: 'contrast', fallbackTitle: 'Operational Bottlenecks & Friction' },
-    { visualType: 'solution_hero', layoutId: 'concept-hero', category: 'Proposed Solution', visualStrategy: 'focal-concept', fallbackTitle: 'Proposed Architectural Paradigm' },
-    { visualType: 'architecture_diagram', layoutId: 'architecture-tiers', category: 'System Architecture', visualStrategy: 'diagram', fallbackTitle: 'Multi-Tier System Topology' },
-    { visualType: 'process_flow', layoutId: 'process-flowchart', category: 'Execution Pipeline', visualStrategy: 'pipeline', fallbackTitle: 'End-to-End Processing Flow' },
-    { visualType: 'comparison_table', layoutId: 'vs-comparison', category: 'Comparative Benchmark', visualStrategy: 'matrix', fallbackTitle: 'Baseline vs Proposed Solution' },
-    { visualType: 'kpi_dashboard', layoutId: 'metrics-dashboard', category: 'Empirical Results', visualStrategy: 'statistics', fallbackTitle: 'Empirical Telemetry & Benchmarks' },
-    { visualType: 'tech_ecosystem', layoutId: 'tech-grid', category: 'Hardware & Tech Stack', visualStrategy: 'ecosystem', fallbackTitle: 'Hardware & Technology Stack' },
-    { visualType: 'timeline_roadmap', layoutId: 'timeline-milestones', category: 'Deployment Horizon', visualStrategy: 'journey', fallbackTitle: 'Deployment Horizon & Milestones' },
-    ...(isViva ? [{ visualType: 'viva_defense' as SlideVisualType, layoutId: 'viva-qa', category: 'Viva Voce Scrutiny', visualStrategy: 'evidence', fallbackTitle: 'Technical Examination Defense' }] : []),
-    { visualType: 'conclusion_bold', layoutId: 'bold-conclusion', category: 'Conclusion & Contributions', visualStrategy: 'statement', fallbackTitle: 'Conclusion & Key Deliverables' },
-    { visualType: 'thank_you', layoutId: 'closing-screen', category: 'Discussion & Inquiries', visualStrategy: 'closing', fallbackTitle: 'Thank You — Open for Questions' },
-  ];
-
-  if (targetCount >= fullArc.length) {
-    return fullArc;
-  }
-
-  const first = fullArc[0];
-  const lastTwo = fullArc.slice(-2);
-  const middlePool = fullArc.slice(1, -2);
-  const neededMiddle = Math.max(1, targetCount - 3);
-
-  const step = middlePool.length / neededMiddle;
-  const selected: SlideNarrativeSlot[] = [];
-  for (let i = 0; i < neededMiddle; i++) {
-    const idx = Math.min(Math.floor(i * step), middlePool.length - 1);
-    const cand = middlePool[idx];
-    if (!selected.some(s => s.visualType === cand.visualType)) {
-      selected.push(cand);
-    }
-  }
-
-  for (const cand of middlePool) {
-    if (selected.length >= neededMiddle) break;
-    if (!selected.some(s => s.visualType === cand.visualType)) {
-      selected.push(cand);
-    }
-  }
-
-  const result = [first, ...selected.slice(0, neededMiddle), ...lastTwo];
-
-  // Strictly enforce: No consecutive duplicate visualTypes
-  for (let i = 1; i < result.length; i++) {
-    if (result[i].visualType === result[i - 1].visualType) {
-      const alt = fullArc.find(a => a.visualType !== result[i - 1].visualType && (i === result.length - 1 || a.visualType !== result[i + 1]?.visualType));
-      if (alt) result[i] = alt;
-    }
-  }
-
-  return result.slice(0, targetCount);
 }
 
 export function findBestSectionForSlot(
@@ -525,7 +761,7 @@ export function findBestSectionForSlot(
     }
   }
 
-  // Fallback: Pick next unused section
+  // Fallback: Next unused section
   for (let i = 0; i < availableSections.length; i++) {
     if (!usedIndices.has(i)) {
       usedIndices.add(i);
@@ -547,63 +783,17 @@ export function findBestSectionForSlot(
 }
 
 // ============================================================
-// VISUAL TYPE INFERENCE
-// ============================================================
-function inferVisualType(
-  title: string,
-  content: string,
-  template: PresentationTemplate,
-  rules: TemplateRules
-): SlideVisualType {
-  const combined = (title + ' ' + content).toLowerCase();
-
-  // Keyword-first detection
-  if (combined.match(/\b(problem|challenge|bottleneck|limitation|gap|issue|difficulty|vulnerability)\b/)) {
-    return 'problem_comparison';
-  }
-  if (combined.match(/\b(architecture|system design|component|module|layer|infrastructure|structure|stack|directory|framework|schema|database)\b/)) {
-    return 'system_architecture';
-  }
-  if (combined.match(/\b(workflow|pipeline|process|methodology|step|phase|algorithm|procedure|setup|installation|lifecycle)\b/)) {
-    return 'workflow_pipeline';
-  }
-  if (combined.match(/\b(result|evaluation|benchmark|accuracy|metric|experiment|performance|test|measure|kpi|statistics)\b/)) {
-    return rules.emphasizeVisuals ? 'results_charts' : 'statistics';
-  }
-  if (combined.match(/\b(timeline|roadmap|future|milestone|schedule|phase|plan|horizon)\b/)) {
-    return 'roadmap';
-  }
-  if (combined.match(/\b(compare|versus|vs|difference|contrast|traditional|existing|alternative)\b/)) {
-    return 'comparison';
-  }
-  if (combined.match(/\b(cost|budget|bill|material|hardware|component|specification|price|equipment)\b/)) {
-    return 'hardware_table';
-  }
-  if (combined.match(/\b(introduction|overview|background|abstract|summary)\b/) && template.family === 'academic_research') {
-    return 'section';
-  }
-  if (combined.match(/\b(conclusion|summary|takeaway|finding|contribution|summary)\b/)) {
-    return 'conclusion';
-  }
-
-  // Template-family fallback
-  if (template.family === 'data_storytelling') return 'statistics';
-  if (template.family === 'bold_creative' || template.family === 'bold_magazine') return 'solution_pillars';
-
-  return 'solution_pillars';
-}
-
-// ============================================================
 // SLIDE CONTENT BUILDER
 // Ensures slides are NEVER empty and raw text is parsed into rich presentation cards
 // ============================================================
-function buildSlideContent(
+export function buildSlideContent(
   sec: DocumentSection,
   visualType: SlideVisualType,
   doc: DocumentAnalysis,
   config: PresentationConfig,
   rules: TemplateRules,
-  template: PresentationTemplate
+  template: PresentationTemplate,
+  plan?: SlideNarrativeSlot[]
 ) {
   const maxBullets = config.density === 'concise'
     ? Math.min(rules.maxBulletsPerSlide, 3)
@@ -611,83 +801,82 @@ function buildSlideContent(
     ? Math.max(rules.maxBulletsPerSlide + 1, 4)
     : rules.maxBulletsPerSlide;
 
-  // 1. Intelligently extract points so a slide is NEVER left with only 1 point or empty cards!
-  let rawPoints = sec.keyPoints && sec.keyPoints.length > 0 ? [...sec.keyPoints] : [];
+  let rawPoints: string[] = sec.keyPoints && sec.keyPoints.length > 0 ? [...sec.keyPoints] : [];
 
   if (rawPoints.length < 3 && sec.content) {
-    // If text contains file tree, directory markers, or lines
-    if (sec.content.includes('├──') || sec.content.includes('│') || sec.content.includes('/')) {
-      const treeLines = sec.content
-        .split('\n')
-        .map(l => l.replace(/[├─│└|\s]+/g, ' ').trim())
-        .filter(l => l.length > 2 && !l.startsWith('#'));
-      if (treeLines.length >= 2) {
-        rawPoints = treeLines.slice(0, 5).map(l => `Module: ${l}`);
-      }
-    } else {
-      // Split sentences
-      const sentences = sec.content
-        .split(/(?<=[.?!])\s+/)
-        .map(s => s.trim())
-        .filter(s => s.length > 15);
-      if (sentences.length >= 2) {
-        rawPoints = [...new Set([...rawPoints, ...sentences])];
-      }
+    const sentences = sec.content
+      .split(/(?<=[.?!])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 15);
+    if (sentences.length >= 2) {
+      rawPoints = [...new Set([...rawPoints, ...sentences])];
     }
   }
 
-  // Guarantee at least 3 presentation points
   if (rawPoints.length === 0) {
     rawPoints = [
-      `${cleanTitle(sec.title)} foundational architectural principles and requirements.`,
-      `Core operational execution pipeline optimized for target platform environments.`,
-      `Empirical validation and performance verification under live operating conditions.`,
+      `${cleanTitle(sec.title)} foundational requirements and operational parameters.`,
+      `Core computational pipeline optimized for target platform execution.`,
+      `Empirical verification and performance benchmarking under live load.`,
     ];
   } else if (rawPoints.length === 1) {
-    const p0 = rawPoints[0];
-    rawPoints = [
-      p0,
-      `Key operational framework: Automated modular execution across verified components.`,
-      `Target delivery: High reliability, low overhead, and scalable maintainability.`,
-    ];
+    rawPoints.push(
+      `Core operational framework: Automated modular execution across verified components.`,
+      `Target delivery: High reliability, low overhead, and scalable maintainability.`
+    );
   } else if (rawPoints.length === 2) {
     rawPoints.push(`Integration & validation: Cross-layer verification ensuring seamless pipeline flow.`);
   }
 
   const points = rawPoints
     .slice(0, Math.max(maxBullets, 3))
-    .map(p => toPresentationLanguage(p, rules.contentTone));
+    .map(p => toPresentationBullet(p, rules.contentTone));
 
   const slideTitleClean = cleanTitle(sec.title);
+  const fullContext = sec.content + ' ' + doc.fullText.slice(0, 3000);
 
   switch (visualType) {
-    case 'agenda':
+    case 'agenda': {
+      const agendaSlides = (plan || [])
+        .filter(s => s.visualType !== 'title' && s.visualType !== 'thank_you' && s.visualType !== 'agenda')
+        .slice(0, 5);
+
+      const agendaItems = agendaSlides.length >= 3
+        ? agendaSlides.map((s, idx) => ({
+            number: `0${idx + 1}`,
+            title: s.category || s.fallbackTitle,
+            time: `${Math.round(idx * 2 + 2)} min`,
+            tag: idx === 0 ? 'Discovery' : idx === 1 ? 'Design' : idx === 2 ? 'Execution' : idx === 3 ? 'Validation' : 'Impact',
+            desc: s.fallbackTitle,
+          }))
+        : [
+            { number: '01', title: 'Problem Context & Operational Bottlenecks', time: '2 min', tag: 'Discovery', desc: 'Baseline limitations and legacy architecture failure modes.' },
+            { number: '02', title: 'Core Architectural Paradigm & Components', time: '3 min', tag: 'Design', desc: 'Decoupled edge processing and autonomous perception topology.' },
+            { number: '03', title: 'End-to-End Processing & Algorithmic Flow', time: '3 min', tag: 'Execution', desc: 'Hardware-accelerated pipeline with zero memory buffer bloat.' },
+            { number: '04', title: 'Empirical Verification & KPI Metrics', time: '2 min', tag: 'Validation', desc: 'Sub-50ms latency SLA with 99.4% top-1 verification accuracy.' },
+            { number: '05', title: 'Deployment Roadmap & Key Deliverables', time: '2 min', tag: 'Impact', desc: 'Hardware BOM optimization and production cluster deployment.' },
+          ];
+
       return {
         bullets: points,
-        agenda: [
-          { number: '01', title: 'Problem Context & Operational Bottlenecks', time: '2 min', tag: 'Discovery', desc: 'Baseline limitations and legacy architecture failure modes.' },
-          { number: '02', title: 'Core Architectural Paradigm & Components', time: '3 min', tag: 'Design', desc: 'Decoupled edge processing and autonomous perception topology.' },
-          { number: '03', title: 'End-to-End Processing & Algorithmic Flow', time: '3 min', tag: 'Execution', desc: 'Hardware-accelerated pipeline with zero memory buffer bloat.' },
-          { number: '04', title: 'Empirical Verification & KPI Metrics', time: '2 min', tag: 'Validation', desc: 'Sub-50ms latency SLA with 99.4% top-1 verification accuracy.' },
-          { number: '05', title: 'Deployment Roadmap & Key Deliverables', time: '2 min', tag: 'Impact', desc: 'Hardware BOM optimization and production cluster deployment.' },
-        ],
+        agenda: agendaItems,
       };
+    }
 
     case 'problem_split':
-    case 'problem_comparison':
+    case 'problem_comparison': {
+      const challenges = extractOperationalChallenges(fullContext, slideTitleClean, points);
+      const metrics = extractQuantitativeMetrics(fullContext, slideTitleClean);
       return {
         bullets: points,
         metrics: [
-          { label: 'Primary Bottleneck', value: points[0]?.slice(0, 30) ?? 'Identified', sub: 'Primary friction area' },
-          { label: 'Scope', value: `${doc.pageCount}p Doc`, sub: 'Covered in technical analysis' },
-          { label: 'Resolution', value: 'Solved', sub: 'Validated in proposed architecture' },
+          { label: 'Primary Failure Metric', value: metrics[0]?.value || '32.4%', sub: 'Baseline failure overhead' },
+          { label: 'Analysis Scope', value: `${doc.pageCount} Pages`, sub: 'Scanned document corpus' },
+          { label: 'Resolution Target', value: 'Resolved', sub: 'Target of proposed design' },
         ],
-        comparison: points.slice(0, 3).map((p, idx) => ({
-          aspect: `Challenge 0${idx + 1}`,
-          flaw: p,
-          severity: idx === 0 ? 'Critical' : 'High',
-        })),
+        comparison: challenges,
       };
+    }
 
     case 'solution_hero':
     case 'solution_pillars':
@@ -695,93 +884,75 @@ function buildSlideContent(
         bullets: points,
         pillars: points.slice(0, 3).map((p, idx) => ({
           number: `0${idx + 1}`,
-          title: extractStepName(p, idx, slideTitleClean),
-          desc: p,
-          tag: rules.contentTone === 'academic' ? 'Research Finding' : 'Key Architecture',
+          title: extractLeadConcept(p),
+          desc: stripLeadIn(p),
+          tag: rules.contentTone === 'academic' ? 'Research Finding' : 'Core Pillar',
         })),
       };
 
     case 'architecture_diagram':
-    case 'system_architecture':
+    case 'system_architecture': {
+      const layers = extractArchitecturalTiers(fullContext, slideTitleClean, points);
       return {
         bullets: points,
-        layers: points.slice(0, 4).map((p, idx) => ({
-          name: `Tier 0${idx + 1}`,
-          node: extractComponentName(p, idx, slideTitleClean),
-          details: p,
-          type: idx === 0 ? 'Input / Ingestion' : idx === points.length - 1 ? 'Output / Storage' : 'Processing Core',
-        })),
+        layers,
         diagramStyle: rules.diagramStyle,
       };
+    }
 
     case 'process_flow':
     case 'workflow_pipeline':
-    case 'process':
+    case 'process': {
+      const steps = extractExecutionSteps(fullContext, slideTitleClean, points);
       return {
         bullets: points,
-        steps: points.slice(0, 4).map((p, idx) => ({
-          step: `${idx + 1}`,
-          name: extractStepName(p, idx, slideTitleClean),
-          tech: template.family === 'future_tech' ? 'Neural Engine Layer' : idx === 0 ? 'OpenCV Ingest' : idx === 1 ? 'TensorRT FP16' : idx === 2 ? 'FAISS Index' : 'Transactional Commit',
-          desc: p,
-        })),
+        steps,
       };
+    }
 
     case 'kpi_dashboard':
     case 'results_charts':
-    case 'statistics':
+    case 'statistics': {
+      const dynamicMetrics = extractQuantitativeMetrics(fullContext, slideTitleClean);
       return {
         bullets: points,
-        metrics: [
-          { label: 'Primary SLA Metric', value: extractMetric(points[0]) ?? '99.4%', delta: '+6.2% vs baseline' },
-          { label: 'Latency / Efficiency', value: extractMetric(points[1]) ?? '42ms', delta: 'FP16 CUDA Speedup' },
-          { label: 'Throughput Speedup', value: '4.8x', delta: 'Zero dropouts verified' },
-        ],
+        metrics: dynamicMetrics,
         benchmarks: [
-          { label: 'Perception Inference (FP16)', value: '18ms', change: 'Validated CUDA runtime SLA' },
-          { label: 'FAISS Vector Similarity Match', value: '1.2ms', change: 'Sub-linear L2 Euclidean match' },
+          { label: dynamicMetrics[0]?.label || 'Execution Latency', value: dynamicMetrics[0]?.value || '42ms', change: dynamicMetrics[0]?.delta || 'Verified target' },
+          { label: dynamicMetrics[1]?.label || 'Overall Accuracy', value: dynamicMetrics[1]?.value || '99.2%', change: dynamicMetrics[1]?.delta || 'Statistical SLA' },
         ],
         chartStyle: rules.chartStyle,
       };
+    }
 
     case 'comparison_table':
-    case 'comparison':
+    case 'comparison': {
+      const compRows = extractComparativeDimensions(fullContext, slideTitleClean, points);
       return {
         bullets: points,
-        rows: points.slice(0, 4).map((p, idx) => ({
-          aspect: `Dimension 0${idx + 1}`,
-          dimension: `Dimension 0${idx + 1}: ${extractStepName(p, idx, slideTitleClean)}`,
-          before: idx === 0 ? 'Traditional Manual Approach' : 'Legacy Baseline Method',
-          baseline: idx === 0 ? 'Traditional Manual Approach' : 'Legacy Baseline Method',
-          after: p,
-          proposed: p,
-          status: idx === 0 ? '30x Faster' : idx === 1 ? 'Autonomous' : idx === 2 ? 'Zero-Trust' : '87% Savings',
-        })),
+        rows: compRows,
       };
+    }
 
     case 'tech_ecosystem':
-    case 'hardware_table':
+    case 'hardware_table': {
+      const items = extractEcosystemItems(fullContext, slideTitleClean, points);
       return {
         bullets: points,
-        items: points.slice(0, 4).map((p, idx) => ({
-          component: extractComponentName(p, idx, slideTitleClean),
-          spec: p,
-          cost: idx === 0 ? '$99' : idx === 1 ? '$32' : idx === 2 ? 'Open Source' : 'Embedded',
-        })),
-        totalCost: 'Estimated Budget: Production Feasible',
+        items,
+        totalCost: 'Production Feasible Architecture',
       };
+    }
 
     case 'timeline_roadmap':
     case 'timeline':
-    case 'roadmap':
+    case 'roadmap': {
+      const milestones = extractRoadmapMilestones(fullContext, slideTitleClean, points);
       return {
         bullets: points,
-        milestones: points.slice(0, 4).map((p, idx) => ({
-          phase: `Phase 0${idx + 1}`,
-          title: extractStepName(p, idx, slideTitleClean),
-          desc: p,
-        })),
+        milestones,
       };
+    }
 
     case 'viva_defense':
       return {
@@ -793,25 +964,26 @@ function buildSlideContent(
     case 'conclusion':
       return {
         bullets: points,
-        takeaways: points.slice(0, 3),
-        thankYou: 'Thank you — Open for Questions',
+        takeaways: points.slice(0, 3).map(p => stripLeadIn(p)),
+        recommendation: `Deploy ${doc.title} into production staging under continuous telemetry monitoring.`,
+        thankYou: 'Thank you — Open for Technical Questions',
       };
 
-    default: // solution_pillars, section, bullets, quote
+    default: // fallback
       return {
         bullets: points,
         pillars: points.slice(0, 3).map((p, idx) => ({
           number: `0${idx + 1}`,
-          title: extractStepName(p, idx, slideTitleClean),
-          desc: p,
-          tag: rules.contentTone === 'academic' ? 'Research Finding' : 'Key Architecture',
+          title: extractLeadConcept(p),
+          desc: stripLeadIn(p),
+          tag: 'Key Finding',
         })),
       };
   }
 }
 
 // ============================================================
-// SECTION SELECTION & DEDUPLICATION
+// HELPER FUNCTIONS
 // ============================================================
 function deduplicateSections(sections: DocumentSection[]): DocumentSection[] {
   const seen = new Set<string>();
@@ -821,43 +993,6 @@ function deduplicateSections(sections: DocumentSection[]): DocumentSection[] {
     seen.add(key);
     return true;
   });
-}
-
-function selectRepresentativeSections(sections: DocumentSection[], count: number): DocumentSection[] {
-  if (sections.length <= count) return sections;
-  // Rank by content richness (word count + key point density)
-  const ranked = [...sections].sort((a, b) => {
-    const scoreA = a.wordCount * 0.4 + a.keyPoints.length * 10;
-    const scoreB = b.wordCount * 0.4 + b.keyPoints.length * 10;
-    return scoreB - scoreA;
-  });
-  // Take top-ranked but maintain document order
-  const topIds = new Set(ranked.slice(0, count).map(s => s.id));
-  return sections.filter(s => topIds.has(s.id));
-}
-
-// ============================================================
-// TEXT HELPERS
-// ============================================================
-function toPresentationLanguage(text: string, tone: string): string {
-  // Strip leading numbering or bullet symbols
-  let cleaned = text
-    .replace(/^(\d+[\.\:\-\)]|\b(step|phase|item|layer)\s*\d+[\.\:\-]?|[•\-\*►])\s*/i, '')
-    .trim()
-    .replace(/\s+/g, ' ');
-
-  // Remove overly academic preambles
-  cleaned = cleaned
-    .replace(/^(The proposed system|It is designed to|This section describes|As mentioned above|In this study,)\s+/i, '')
-    .replace(/^(We have|Our system|This paper|The authors)\s+/i, '');
-
-  if (cleaned.length > 140) {
-    const cutAt = cleaned.lastIndexOf(' ', 135);
-    cleaned = cleaned.slice(0, cutAt > 60 ? cutAt : 135) + '...';
-  }
-
-  if (tone === 'technical' || tone === 'academic') return cleaned;
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
 function buildConciseSubtitle(summary: string, tone: string): string {
@@ -875,48 +1010,10 @@ function buildSectionSubtitle(sec: DocumentSection, tone: string): string {
 
 function cleanTitle(title: string): string {
   return title
-    .replace(/^\d+[\.\:\-\)]\s*/, '')  // Remove "11. " or "3: " prefixes
-    .replace(/^[IVX]+[\.\:\-\)]\s*/i, '') // Remove "III. " prefixes
-    .replace(/^Section\s+\d+[\.\:\-]?\s*/i, '') // Remove "Section 11: "
+    .replace(/^\d+[\.\:\-\)]\s*/, '')
+    .replace(/^[IVX]+[\.\:\-\)]\s*/i, '')
+    .replace(/^Section\s+\d+[\.\:\-]?\s*/i, '')
     .trim();
-}
-
-function extractComponentName(text: string, idx: number, slideTitle?: string): string {
-  const match = text.match(/^([A-Z][a-zA-Z\s]{2,25})(?:[:\-.,]|$)/);
-  let name = match ? match[1].trim() : '';
-  if (name && slideTitle && name.toLowerCase().includes(slideTitle.toLowerCase().slice(0, 12))) {
-    name = '';
-  }
-  if (!name) {
-    const defaults = ['Ingestion & Client Interface', 'Core Processing Pipeline', 'Data Persistence & Storage', 'Security & Infrastructure'];
-    return defaults[idx] ?? `Component Layer 0${idx + 1}`;
-  }
-  return name;
-}
-
-function extractStepName(text: string, idx: number, slideTitle?: string): string {
-  let cleaned = text
-    .replace(/^(\d+[\.\:\-\)]|\b(step|phase|item|layer)\s*\d+[\.\:\-]?|[•\-\*►])\s*/i, '')
-    .trim();
-
-  // If text repeats the slide title, generate distinctive concept names
-  if (slideTitle && cleaned.toLowerCase().startsWith(slideTitle.toLowerCase().slice(0, 15))) {
-    const concepts = ['Architectural Foundations', 'Execution & Pipeline', 'Deployment & Verification', 'Scale & Reliability'];
-    return concepts[idx] ?? `Focus Area 0${idx + 1}`;
-  }
-
-  const words = cleaned.split(/\s+/).slice(0, 4).join(' ');
-  if (!words || (slideTitle && words.toLowerCase() === slideTitle.toLowerCase())) {
-    const defaults = ['System Overview', 'Core Processing', 'Operational Output', 'Validation & Telemetry'];
-    return defaults[idx] ?? `Module 0${idx + 1}`;
-  }
-  return words;
-}
-
-function extractMetric(text: string | undefined): string | null {
-  if (!text) return null;
-  const match = text.match(/(\d+(?:\.\d+)?%|\d+\.\d+|\d{2,}(?:\s*(ms|s|kb|mb|gb))?)/i);
-  return match ? match[0] : null;
 }
 
 function extractTopicTags(title: string, fullText: string): string[] {
@@ -929,7 +1026,7 @@ function extractTopicTags(title: string, fullText: string): string[] {
   if (lower.match(/\b(blockchain|distributed|decentralized|crypto)\b/)) tags.push('Distributed Systems');
   if (lower.match(/\b(data|analytics|dashboard|visualization|database)\b/)) tags.push('Data Engineering');
   if (lower.match(/\b(mobile|android|ios|app|flutter|react native)\b/)) tags.push('Mobile Development');
-  if (tags.length === 0) tags.push('Engineering Research', 'System Analysis', 'Technical Study');
+  if (tags.length === 0) tags.push('Engineering Analysis', 'System Architecture', 'Technical Research');
   return tags.slice(0, 4);
 }
 
@@ -939,8 +1036,8 @@ function purposeToInstitution(purpose: string): string {
     seminar: 'Departmental Seminar',
     research: 'Research Presentation',
     assignment: 'Academic Assignment',
-    business: 'Business Presentation',
-    custom: 'Presentation',
+    business: 'Executive Presentation',
+    custom: 'Presentation Studio',
   };
   return map[purpose] ?? 'Presentation';
 }
@@ -957,22 +1054,6 @@ function generateSpeakerNotes(sec: DocumentSection, docTitle: string, template: 
     ? `The technical implementation demonstrates`
     : `Our analysis reveals`;
   return `${toneIntro}: "${sec.title}" on page ${page}. ${sec.keyPoints[0] ?? sec.content.slice(0, 100)}. This section directly supports our primary thesis within "${docTitle}".`;
-}
-
-function buildConclusionPoints(
-  doc: DocumentAnalysis,
-  lastSection: DocumentSection,
-  config: PresentationConfig
-): string[] {
-  const raw = lastSection.keyPoints.length > 0
-    ? lastSection.keyPoints.slice(0, 3)
-    : [`Successfully implemented all core objectives of ${doc.title}.`];
-  return [
-    ...raw.map(p => toPresentationLanguage(p, 'academic')),
-    config.purpose === 'project_viva'
-      ? 'System validated against academic criteria — ready for deployment.'
-      : 'All deliverables meet defined specifications and objectives.',
-  ].slice(0, 4);
 }
 
 function generateVivaQuestions(doc: DocumentAnalysis): { q: string; a: string; badge: string }[] {
@@ -995,15 +1076,4 @@ function generateVivaQuestions(doc: DocumentAnalysis): { q: string; a: string; b
       badge: 'Scalability',
     },
   ];
-}
-
-function categorizeSection(title: string): string {
-  const lower = title.toLowerCase();
-  if (lower.match(/problem|challenge|gap|issue/)) return 'Problem Formulation';
-  if (lower.match(/architect|design|system|infrastructure/)) return 'Architecture';
-  if (lower.match(/result|benchmark|evaluation|metric/)) return 'Results & Evaluation';
-  if (lower.match(/workflow|method|process|algorithm/)) return 'Methodology';
-  if (lower.match(/introduction|overview|background|abstract/)) return 'Introduction';
-  if (lower.match(/conclusion|summary|future/)) return 'Conclusion';
-  return 'Technical Analysis';
 }

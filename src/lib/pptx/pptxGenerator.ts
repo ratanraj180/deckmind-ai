@@ -123,7 +123,8 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
   const isApple = layoutFamily === 'minimal' || layoutStyle === 'apple-minimal';
   const isDataDash = layoutFamily === 'dashboard' || layoutStyle === 'data-dashboard';
   const isMagazine = layoutFamily === 'magazine' || layoutStyle === 'bold-magazine';
-  const isPoster = layoutFamily === 'poster' || layoutStyle === 'poster';
+  const isAurora = layoutFamily === 'gradient-mesh' || layoutStyle === 'aurora-gradient' || designFamily === 'aurora_gradient' || designFamily === 'glass_aurora';
+  const isAcademic = layoutStyle === 'academic-research' || designFamily === 'academic_research' || galleryTemplate?.category === 'Academic';
 
   // Process each slide
   for (const slide of slides) {
@@ -267,42 +268,837 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
 
     if (isTitleSlide) {
       // ════════════════════════════════════════════════════════
-      // SLIDE 1: HERO TITLE SLIDE
+      // SLIDE 1: HERO TITLE SLIDE (CUSTOMIZED FOR EVERY TEMPLATE)
       // ════════════════════════════════════════════════════════
       const contentObj = (slide.content as Record<string, unknown>) ?? {};
       const tags = (contentObj.tags as string[] | undefined) ?? ['DeckMind AI', 'Technical Defense'];
       const institution = (contentObj.institution as string | undefined) ?? 'Department of Computer Science';
       const authors = (contentObj.authors as string[] | undefined) ?? ['Project Team'];
       const authorText = authors.length > 0 ? authors.join('  •  ') : 'Project Author';
+      const guide = (contentObj.guide as string | undefined) ?? 'Faculty Advisor';
+      const academicYear = (contentObj.academicYear as string | undefined) ?? '2026';
 
-      if (isSplitHero) {
-        // Split-Hero Title Slide
-        pSlide.addText('PRESENTATION', {
-          x: 0.4,
-          y: 1.8,
-          w: 2.3,
+      // ────────────────────────────────────────────────────────
+      // 1. NEO-BRUTALIST & MEMPHIS POP TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      if (isBrutalist) {
+        // Top Yellow/Black Sticker Badge
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.6,
+          y: 0.4,
+          w: 3.5,
           h: 0.35,
-          fontSize: 11,
+          fill: { color: 'FEF08A' },
+          line: { color: '000000', width: 2.0 },
+        });
+        pSlide.addText('★ 100% PRODUCTION READY ★', {
+          x: 0.6,
+          y: 0.4,
+          w: 3.5,
+          h: 0.35,
+          fontSize: 9.5,
+          bold: true,
+          color: '000000',
+          align: 'center',
+          fontFace: 'Arial Black',
+        });
+
+        // Top Slide Marker
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 7.2,
+          y: 0.4,
+          w: 2.2,
+          h: 0.35,
+          fill: { color: '000000' },
+          line: { color: '000000', width: 0 },
+        });
+        pSlide.addText('SLIDE 01 // CAPSTONE', {
+          x: 7.2,
+          y: 0.4,
+          w: 2.2,
+          h: 0.35,
+          fontSize: 9,
+          bold: true,
+          color: 'FFFFFF',
+          align: 'center',
+          fontFace: 'Consolas',
+        });
+
+        // Offset Black Shadow Box for Main Card
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.68,
+          y: 1.03,
+          w: 8.7,
+          h: 3.6,
+          fill: { color: '000000' },
+          line: { color: '000000', width: 0 },
+        });
+        // Main Brutalist Card
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.6,
+          y: 0.95,
+          w: 8.7,
+          h: 3.6,
+          fill: { color: palette.cardBg || 'FFFFFF' },
+          line: { color: '000000', width: 2.5 },
+        });
+
+        // Project Spec Ribbon inside card
+        pSlide.addText(`PROJECT SPECIFICATION // ID #${String(slide.id ?? '2026').slice(0, 6)}`, {
+          x: 0.9,
+          y: 1.15,
+          w: 8.0,
+          h: 0.3,
+          fontSize: 8.5,
+          bold: true,
+          color: '525252',
+          fontFace: 'Consolas',
+        });
+
+        // Main Title
+        const bTitleSize = (slide.title || title).length > 45 ? 24 : 30;
+        pSlide.addText((slide.title || title).toUpperCase(), {
+          x: 0.9,
+          y: 1.45,
+          w: 8.1,
+          h: 1.4,
+          fontSize: bTitleSize,
+          bold: true,
+          color: '000000',
+          fontFace: 'Arial Black',
+        });
+
+        // Subtitle
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle, {
+            x: 0.9,
+            y: 2.9,
+            w: 8.1,
+            h: 0.6,
+            fontSize: 12,
+            bold: true,
+            color: '1F2937',
+            fontFace,
+          });
+        }
+
+        // Brutalist Tag Chips
+        tags.slice(0, 4).forEach((tag, idx) => {
+          const tX = 0.9 + idx * 1.9;
+          const bgCol = idx % 2 === 0 ? 'FEF08A' : 'BAE6FD';
+          pSlide.addShape(pptx.ShapeType.rect, {
+            x: tX,
+            y: 3.75,
+            w: 1.75,
+            h: 0.32,
+            fill: { color: bgCol },
+            line: { color: '000000', width: 1.5 },
+          });
+          pSlide.addText(`#${tag}`, {
+            x: tX,
+            y: 3.75,
+            w: 1.75,
+            h: 0.32,
+            fontSize: 8.5,
+            bold: true,
+            color: '000000',
+            align: 'center',
+            fontFace: 'Consolas',
+          });
+        });
+
+        // Bottom Black Footer Bar
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.6,
+          y: 4.8,
+          w: 8.8,
+          h: 0.45,
+          fill: { color: '000000' },
+          line: { color: '000000', width: 0 },
+        });
+        pSlide.addText(`AUTHOR: ${authorText}   |   GUIDE: ${guide}   |   ${institution}`, {
+          x: 0.8,
+          y: 4.8,
+          w: 8.4,
+          h: 0.45,
+          fontSize: 9,
+          bold: true,
+          color: 'FEF08A',
+          fontFace: 'Consolas',
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 2. CYBER TECH & LINEAR DARK TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isDarkImmersive) {
+        // Glowing Laser Line
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0,
+          y: 0,
+          w: SLIDE_W,
+          h: 0.1,
+          fill: { color: palette.accent },
+          line: { color: palette.accent, width: 0 },
+        });
+
+        // Corner Reticles
+        pSlide.addText('┌ [SYS_CORE_ACTIVE]', {
+          x: 0.5,
+          y: 0.25,
+          w: 3.0,
+          h: 0.3,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          fontFace: 'Consolas',
+        });
+        pSlide.addText('PORT_8080 // ONLINE ┐', {
+          x: 6.5,
+          y: 0.25,
+          w: 3.0,
+          h: 0.3,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          align: 'right',
+          fontFace: 'Consolas',
+        });
+
+        // Left Vertical Neon Accent Strip
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.5,
+          y: 0.9,
+          w: 0.08,
+          h: 3.8,
+          fill: { color: palette.accent },
+          line: { color: palette.accent, width: 0 },
+        });
+
+        // Eyebrow Kicker
+        pSlide.addText(`// SYSTEM DEFENSE // ${institution.toUpperCase()}`, {
+          x: 0.8,
+          y: 0.9,
+          w: 8.4,
+          h: 0.3,
+          fontSize: 9.5,
+          bold: true,
+          color: palette.accent,
+          fontFace: 'Consolas',
+        });
+
+        // Main Title
+        const cTitleSize = (slide.title || title).length > 45 ? 24 : 30;
+        pSlide.addText(slide.title || title, {
+          x: 0.8,
+          y: 1.25,
+          w: 8.4,
+          h: 1.5,
+          fontSize: cTitleSize,
+          bold: true,
+          color: palette.primary,
+          fontFace: 'Consolas',
+        });
+
+        // Subtitle
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle, {
+            x: 0.8,
+            y: 2.8,
+            w: 8.4,
+            h: 0.65,
+            fontSize: 13,
+            color: palette.secondary,
+            fontFace: 'Consolas',
+          });
+        }
+
+        // Cyber Tag Pills
+        tags.slice(0, 4).forEach((tag, idx) => {
+          const tX = 0.8 + idx * 2.0;
+          pSlide.addShape(pptx.ShapeType.roundRect, {
+            x: tX,
+            y: 3.65,
+            w: 1.85,
+            h: 0.35,
+            fill: { color: palette.cardBg },
+            line: { color: palette.accent, width: 0.75 },
+          });
+          pSlide.addText(`#${tag}`, {
+            x: tX,
+            y: 3.65,
+            w: 1.85,
+            h: 0.35,
+            fontSize: 8.5,
+            bold: true,
+            color: palette.accent,
+            align: 'center',
+            fontFace: 'Consolas',
+          });
+        });
+
+        // Telemetry HUD Metadata Card
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 0.8,
+          y: 4.5,
+          w: 8.4,
+          h: 0.65,
+          fill: { color: palette.cardBg },
+          line: { color: palette.border, width: 0.75 },
+        });
+        pSlide.addText(`LEAD: ${authorText}   |   ADVISOR: ${guide}   |   SESSION: ${academicYear}   |   SEC_VERIFIED`, {
+          x: 1.0,
+          y: 4.5,
+          w: 8.0,
+          h: 0.65,
+          fontSize: 9,
+          bold: true,
+          color: palette.secondary,
+          fontFace: 'Consolas',
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 3. BENTO GRID HERO TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isBento) {
+        // Tile 1: Massive Left Hero Card (w: 5.6, h: 4.4)
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 0.6,
+          y: 0.5,
+          w: 5.6,
+          h: 4.5,
+          fill: { color: palette.cardBg },
+          line: { color: palette.border, width: 1.0 },
+        });
+        // Top accent strip on card
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 0.6,
+          y: 0.5,
+          w: 5.6,
+          h: 0.08,
+          fill: { color: palette.accent },
+          line: { color: palette.accent, width: 0 },
+        });
+
+        pSlide.addText('CORE DELIVERABLE & SPECIFICATION', {
+          x: 0.9,
+          y: 0.8,
+          w: 5.0,
+          h: 0.25,
+          fontSize: 8.5,
           bold: true,
           color: palette.accent,
           fontFace,
         });
+
+        const bentoTitleSize = (slide.title || title).length > 45 ? 22 : 26;
         pSlide.addText(slide.title || title, {
-          x: 0.4,
+          x: 0.9,
+          y: 1.15,
+          w: 5.0,
+          h: 1.5,
+          fontSize: bentoTitleSize,
+          bold: true,
+          color: palette.primary,
+          fontFace,
+        });
+
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle, {
+            x: 0.9,
+            y: 2.7,
+            w: 5.0,
+            h: 0.9,
+            fontSize: 12,
+            color: palette.secondary,
+            fontFace,
+          });
+        }
+
+        // Tags in Left Card
+        tags.slice(0, 3).forEach((tag, idx) => {
+          const tX = 0.9 + idx * 1.6;
+          pSlide.addShape(pptx.ShapeType.roundRect, {
+            x: tX,
+            y: 3.8,
+            w: 1.5,
+            h: 0.32,
+            fill: { color: palette.background },
+            line: { color: palette.border, width: 0.75 },
+          });
+          pSlide.addText(tag, {
+            x: tX,
+            y: 3.8,
+            w: 1.5,
+            h: 0.32,
+            fontSize: 8,
+            bold: true,
+            color: palette.accent,
+            align: 'center',
+            fontFace,
+          });
+        });
+
+        // Tile 2: Top Right Saturated Accent Tile (w: 3.2, h: 2.1)
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 6.4,
+          y: 0.5,
+          w: 3.0,
+          h: 2.1,
+          fill: { color: palette.accent },
+          line: { color: palette.accent, width: 0 },
+        });
+        pSlide.addText('STATUS: 100% READY', {
+          x: 6.6,
+          y: 0.75,
+          w: 2.6,
+          h: 0.3,
+          fontSize: 10,
+          bold: true,
+          color: 'FFFFFF',
+          fontFace,
+        });
+        pSlide.addText('TECHNICAL CAPSTONE DEFENSE', {
+          x: 6.6,
+          y: 1.1,
+          w: 2.6,
+          h: 0.6,
+          fontSize: 13,
+          bold: true,
+          color: 'FFFFFF',
+          fontFace,
+        });
+        pSlide.addText(`THEME: ${templateName.toUpperCase()}`, {
+          x: 6.6,
+          y: 1.9,
+          w: 2.6,
+          h: 0.3,
+          fontSize: 8.5,
+          color: 'FFFFFF',
+          fontFace: 'Consolas',
+        });
+
+        // Tile 3: Bottom Right Metadata Tile (w: 3.2, h: 2.2)
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 6.4,
+          y: 2.8,
+          w: 3.0,
+          h: 2.2,
+          fill: { color: palette.cardBg },
+          line: { color: palette.border, width: 1.0 },
+        });
+        pSlide.addText('PRESENTER & TEAM', {
+          x: 6.6,
+          y: 3.0,
+          w: 2.6,
+          h: 0.25,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          fontFace,
+        });
+        pSlide.addText(authorText, {
+          x: 6.6,
+          y: 3.3,
+          w: 2.6,
+          h: 0.45,
+          fontSize: 11,
+          bold: true,
+          color: palette.primary,
+          fontFace,
+        });
+        pSlide.addText(`Advisor: ${guide}\n${institution}`, {
+          x: 6.6,
+          y: 3.8,
+          w: 2.6,
+          h: 0.6,
+          fontSize: 9.5,
+          color: palette.secondary,
+          fontFace,
+        });
+        pSlide.addText(academicYear, {
+          x: 6.6,
+          y: 4.5,
+          w: 2.6,
+          h: 0.25,
+          fontSize: 8.5,
+          color: palette.secondary,
+          fontFace: 'Consolas',
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 4. SWISS EDITORIAL & ZURICH RED TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isAsymmetric) {
+        // Thick Swiss Vertical Spine in Vermilion/Accent
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.5,
+          y: 0.4,
+          w: 0.16,
+          h: 4.8,
+          fill: { color: palette.accent },
+          line: { color: palette.accent, width: 0 },
+        });
+
+        // Watermark "01" on the right
+        pSlide.addText('01', {
+          x: 7.2,
           y: 2.2,
-          w: 2.3,
+          w: 2.5,
           h: 2.5,
-          fontSize: 20,
+          fontSize: 72,
+          bold: true,
+          color: palette.border || 'E5E5E5',
+          fontFace: 'Helvetica',
+        });
+
+        // Top Swiss Header
+        pSlide.addText(`ZURICH SPECIFICATION // ${institution.toUpperCase()}`, {
+          x: 0.9,
+          y: 0.4,
+          w: 6.5,
+          h: 0.3,
+          fontSize: 9,
+          bold: true,
+          color: palette.accent,
+          fontFace: 'Consolas',
+        });
+
+        // Horizontal Rule
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.9,
+          y: 0.75,
+          w: 8.5,
+          h: 0.02,
+          fill: { color: palette.primary },
+          line: { color: palette.primary, width: 0 },
+        });
+
+        // Giant Display Title
+        const sTitleSize = (slide.title || title).length > 40 ? 26 : 32;
+        pSlide.addText((slide.title || title).toUpperCase(), {
+          x: 0.9,
+          y: 1.1,
+          w: 7.5,
+          h: 1.8,
+          fontSize: sTitleSize,
+          bold: true,
+          color: palette.primary,
+          fontFace: 'Helvetica',
+        });
+
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle, {
+            x: 0.9,
+            y: 3.0,
+            w: 6.5,
+            h: 0.8,
+            fontSize: 14,
+            bold: true,
+            color: palette.secondary,
+            fontFace,
+          });
+        }
+
+        // Tags
+        tags.slice(0, 4).forEach((tag, idx) => {
+          const tX = 0.9 + idx * 1.8;
+          pSlide.addShape(pptx.ShapeType.rect, {
+            x: tX,
+            y: 3.9,
+            w: 1.65,
+            h: 0.3,
+            fill: { color: idx === 0 ? palette.primary : palette.cardBg },
+            line: { color: palette.primary, width: 1.0 },
+          });
+          pSlide.addText(tag.toUpperCase(), {
+            x: tX,
+            y: 3.9,
+            w: 1.65,
+            h: 0.3,
+            fontSize: 8,
+            bold: true,
+            color: idx === 0 ? palette.background : palette.text,
+            align: 'center',
+            fontFace: 'Consolas',
+          });
+        });
+
+        // Bottom Tabular Grid
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.9,
+          y: 4.5,
+          w: 8.5,
+          h: 0.02,
+          fill: { color: palette.primary },
+          line: { color: palette.primary, width: 0 },
+        });
+        pSlide.addText(`AUTHOR: ${authorText}   |   GUIDE: ${guide}   |   YEAR: ${academicYear}   |   SPEC: ${templateName}`, {
+          x: 0.9,
+          y: 4.65,
+          w: 8.5,
+          h: 0.35,
+          fontSize: 9,
+          bold: true,
+          color: palette.secondary,
+          fontFace: 'Consolas',
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 5. ACADEMIC RESEARCH & CAPSTONE DISSERTATION TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isAcademic) {
+        // Double Scholarly Frame
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 0.4,
+          y: 0.3,
+          w: 9.2,
+          h: 5.0,
+          fill: { color: palette.background },
+          line: { color: palette.accent, width: 1.5 },
+        });
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 0.5,
+          y: 0.4,
+          w: 9.0,
+          h: 4.8,
+          fill: { color: palette.background },
+          line: { color: palette.border, width: 0.75 },
+        });
+
+        // Top Heraldry Pill
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: (SLIDE_W - 4.5) / 2,
+          y: 0.65,
+          w: 4.5,
+          h: 0.35,
+          fill: { color: palette.cardBg },
+          line: { color: palette.accent, width: 1.0 },
+        });
+        pSlide.addText('DISSERTATION DEFENSE & TECHNICAL PROCEEDING', {
+          x: (SLIDE_W - 4.5) / 2,
+          y: 0.65,
+          w: 4.5,
+          h: 0.35,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          align: 'center',
+          fontFace: 'Georgia',
+        });
+
+        pSlide.addText(institution, {
+          x: 1.0,
+          y: 1.1,
+          w: 8.0,
+          h: 0.3,
+          fontSize: 10,
+          italic: true,
+          color: palette.secondary,
+          align: 'center',
+          fontFace: 'Georgia',
+        });
+
+        // Centered Main Title
+        const aTitleSize = (slide.title || title).length > 45 ? 24 : 28;
+        pSlide.addText(slide.title || title, {
+          x: 1.0,
+          y: 1.5,
+          w: 8.0,
+          h: 1.5,
+          fontSize: aTitleSize,
+          bold: true,
+          color: palette.primary,
+          align: 'center',
+          fontFace: 'Georgia',
+        });
+
+        if (slide.subtitle) {
+          pSlide.addText(`"${slide.subtitle}"`, {
+            x: 1.5,
+            y: 3.0,
+            w: 7.0,
+            h: 0.6,
+            fontSize: 13,
+            italic: true,
+            color: palette.secondary,
+            align: 'center',
+            fontFace: 'Georgia',
+          });
+        }
+
+        // Credential Boxes (3 columns)
+        const boxW = 2.4;
+        const boxGap = 0.3;
+        const startBX = (SLIDE_W - (3 * boxW + 2 * boxGap)) / 2;
+
+        // Box 1: Candidate
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: startBX,
+          y: 3.9,
+          w: boxW,
+          h: 0.9,
+          fill: { color: palette.cardBg },
+          line: { color: palette.border, width: 0.75 },
+        });
+        pSlide.addText('CANDIDATE / AUTHOR', {
+          x: startBX,
+          y: 4.0,
+          w: boxW,
+          h: 0.25,
+          fontSize: 7.5,
+          bold: true,
+          color: palette.secondary,
+          align: 'center',
+          fontFace: 'Consolas',
+        });
+        pSlide.addText(authorText, {
+          x: startBX,
+          y: 4.25,
+          w: boxW,
+          h: 0.45,
+          fontSize: 10,
+          bold: true,
+          color: palette.primary,
+          align: 'center',
+          fontFace: 'Georgia',
+        });
+
+        // Box 2: Advisor
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: startBX + boxW + boxGap,
+          y: 3.9,
+          w: boxW,
+          h: 0.9,
+          fill: { color: palette.cardBg },
+          line: { color: palette.border, width: 0.75 },
+        });
+        pSlide.addText('FACULTY ADVISOR', {
+          x: startBX + boxW + boxGap,
+          y: 4.0,
+          w: boxW,
+          h: 0.25,
+          fontSize: 7.5,
+          bold: true,
+          color: palette.secondary,
+          align: 'center',
+          fontFace: 'Consolas',
+        });
+        pSlide.addText(guide, {
+          x: startBX + boxW + boxGap,
+          y: 4.25,
+          w: boxW,
+          h: 0.45,
+          fontSize: 10,
+          bold: true,
+          color: palette.primary,
+          align: 'center',
+          fontFace: 'Georgia',
+        });
+
+        // Box 3: Session
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: startBX + 2 * (boxW + boxGap),
+          y: 3.9,
+          w: boxW,
+          h: 0.9,
+          fill: { color: palette.cardBg },
+          line: { color: palette.border, width: 0.75 },
+        });
+        pSlide.addText('ACADEMIC SESSION', {
+          x: startBX + 2 * (boxW + boxGap),
+          y: 4.0,
+          w: boxW,
+          h: 0.25,
+          fontSize: 7.5,
+          bold: true,
+          color: palette.secondary,
+          align: 'center',
+          fontFace: 'Consolas',
+        });
+        pSlide.addText(`${academicYear} • DEFENSE READY`, {
+          x: startBX + 2 * (boxW + boxGap),
+          y: 4.25,
+          w: boxW,
+          h: 0.45,
+          fontSize: 10,
+          bold: true,
+          color: palette.accent,
+          align: 'center',
+          fontFace: 'Georgia',
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 6. SPLIT HERO & BOLD MAGAZINE TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isSplitHero || isMagazine) {
+        // Left Solid Panel
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0,
+          y: 0,
+          w: 3.6,
+          h: SLIDE_H,
+          fill: { color: palette.primary },
+          line: { color: palette.primary, width: 0 },
+        });
+
+        // Accent strip on border
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 3.55,
+          y: 0,
+          w: 0.08,
+          h: SLIDE_H,
+          fill: { color: palette.accent },
+          line: { color: palette.accent, width: 0 },
+        });
+
+        pSlide.addText('VOL. 26 // ISSUE 01', {
+          x: 0.5,
+          y: 0.6,
+          w: 2.8,
+          h: 0.3,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          fontFace: 'Consolas',
+        });
+
+        pSlide.addText('FEATURE STORY', {
+          x: 0.5,
+          y: 1.0,
+          w: 2.8,
+          h: 0.3,
+          fontSize: 10,
+          bold: true,
+          color: 'FFFFFF',
+          fontFace: 'Consolas',
+        });
+
+        pSlide.addText((slide.title || title).toUpperCase(), {
+          x: 0.5,
+          y: 1.5,
+          w: 2.8,
+          h: 2.5,
+          fontSize: 22,
           bold: true,
           color: 'FFFFFF',
           fontFace,
         });
 
-        // Right panel
-        pSlide.addText('PROJECT DEFENSE & TECHNICAL SPECIFICATION', {
-          x: 3.5,
-          y: 1.2,
-          w: 6.0,
+        pSlide.addText(institution, {
+          x: 0.5,
+          y: 4.8,
+          w: 2.8,
+          h: 0.3,
+          fontSize: 9,
+          color: 'FFFFFF',
+          fontFace: 'Consolas',
+        });
+
+        // Right Panel
+        pSlide.addText('EXECUTIVE BRIEFING & DELIVERABLES', {
+          x: 4.0,
+          y: 0.6,
+          w: 5.5,
           h: 0.3,
           fontSize: 9,
           bold: true,
@@ -311,66 +1107,361 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
         });
 
         pSlide.addText(slide.subtitle ?? 'System Overview and Implementation Results', {
-          x: 3.5,
-          y: 1.6,
-          w: 6.0,
-          h: 1.0,
-          fontSize: 14,
+          x: 4.0,
+          y: 1.0,
+          w: 5.5,
+          h: 1.2,
+          fontSize: 15,
+          bold: true,
           color: palette.text,
           fontFace,
         });
 
-        // Right Bento Summary Box
-        drawCard(3.5, 2.8, 6.0, 1.8);
-        pSlide.addText('EXECUTIVE SUMMARY & DELIVERABLES', {
-          x: 3.8,
-          y: 3.0,
-          w: 5.4,
-          h: 0.3,
-          fontSize: 9.5,
+        // Right Bento Box
+        drawCard(4.0, 2.4, 5.5, 2.0);
+        pSlide.addText('PROJECT SPECIFICATION & PERSONNEL', {
+          x: 4.3,
+          y: 2.6,
+          w: 5.0,
+          h: 0.25,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          fontFace,
+        });
+        pSlide.addText(authorText, {
+          x: 4.3,
+          y: 2.95,
+          w: 5.0,
+          h: 0.4,
+          fontSize: 12,
           bold: true,
           color: palette.primary,
           fontFace,
         });
-        pSlide.addText(authorText, {
-          x: 3.8,
-          y: 3.35,
-          w: 5.4,
-          h: 0.4,
-          fontSize: 12,
-          bold: true,
-          color: palette.text,
-          fontFace,
-        });
-        pSlide.addText(institution, {
-          x: 3.8,
-          y: 3.8,
-          w: 5.4,
-          h: 0.4,
+        pSlide.addText(`Advisor: ${guide}\n${institution}`, {
+          x: 4.3,
+          y: 3.4,
+          w: 5.0,
+          h: 0.5,
           fontSize: 10,
           color: palette.secondary,
           fontFace,
         });
+        pSlide.addText(`Session: ${academicYear}   |   ${templateName}`, {
+          x: 4.3,
+          y: 3.95,
+          w: 5.0,
+          h: 0.3,
+          fontSize: 8.5,
+          color: palette.secondary,
+          fontFace: 'Consolas',
+        });
 
+      // ────────────────────────────────────────────────────────
+      // 7. ENGINEERING BLUEPRINT TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isBlueprint) {
+        // Top blueprint line
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0,
+          y: 0,
+          w: SLIDE_W,
+          h: 0.08,
+          fill: { color: palette.accent },
+          line: { color: palette.accent, width: 0 },
+        });
+
+        pSlide.addText(`+ [CAD_SCHEMATIC] // ${institution.toUpperCase()} // GRID: A1`, {
+          x: 0.6,
+          y: 0.2,
+          w: 6.0,
+          h: 0.25,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          fontFace: 'Consolas',
+        });
+        pSlide.addText('DWG NO: DM-2026-TITL-01 +', {
+          x: 6.5,
+          y: 0.2,
+          w: 3.0,
+          h: 0.25,
+          fontSize: 8.5,
+          bold: true,
+          color: palette.accent,
+          align: 'right',
+          fontFace: 'Consolas',
+        });
+
+        pSlide.addText('SPECIFICATION TITLE BLOCK // REV 2.6', {
+          x: 0.6,
+          y: 0.9,
+          w: 5.0,
+          h: 0.3,
+          fontSize: 9,
+          bold: true,
+          color: palette.accent,
+          fontFace: 'Consolas',
+        });
+
+        const bpTitleSize = (slide.title || title).length > 45 ? 24 : 28;
+        pSlide.addText((slide.title || title).toUpperCase(), {
+          x: 0.6,
+          y: 1.25,
+          w: 8.8,
+          h: 1.4,
+          fontSize: bpTitleSize,
+          bold: true,
+          color: palette.primary,
+          fontFace: 'Consolas',
+        });
+
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle, {
+            x: 0.6,
+            y: 2.8,
+            w: 8.8,
+            h: 0.7,
+            fontSize: 12,
+            color: palette.secondary,
+            fontFace: 'Consolas',
+          });
+        }
+
+        // Blueprint Title Block Table (Bottom Right)
+        pSlide.addShape(pptx.ShapeType.rect, {
+          x: 0.6,
+          y: 4.2,
+          w: 8.8,
+          h: 1.0,
+          fill: { color: palette.cardBg },
+          line: { color: palette.accent, width: 1.5 },
+        });
+        pSlide.addText(`ENGINEER: ${authorText}       CHECKED BY: ${guide}       RELEASE: ${academicYear}\nSTATUS: APPROVED FOR PRODUCTION       TOLERANCE: ±0.01mm       SCALE: 1:1 METRIC`, {
+          x: 0.8,
+          y: 4.3,
+          w: 8.4,
+          h: 0.8,
+          fontSize: 9,
+          bold: true,
+          color: palette.primary,
+          fontFace: 'Consolas',
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 8. DATA DASHBOARD & TELEMETRY TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isDataDash) {
+        // Top Telemetry Header
+        pSlide.addText(`LIVE TELEMETRY // 99.9% ACCURACY // ${institution.toUpperCase()}`, {
+          x: 0.6,
+          y: 0.4,
+          w: 8.8,
+          h: 0.3,
+          fontSize: 9,
+          bold: true,
+          color: palette.accent,
+          fontFace: 'Consolas',
+        });
+
+        const dTitleSize = (slide.title || title).length > 45 ? 24 : 30;
+        pSlide.addText(slide.title || title, {
+          x: 0.6,
+          y: 0.8,
+          w: 8.8,
+          h: 1.3,
+          fontSize: dTitleSize,
+          bold: true,
+          color: palette.primary,
+          fontFace,
+        });
+
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle, {
+            x: 0.6,
+            y: 2.2,
+            w: 8.8,
+            h: 0.6,
+            fontSize: 13,
+            color: palette.secondary,
+            fontFace,
+          });
+        }
+
+        // 3 KPI Stat Cards
+        const cardW = 2.75;
+        const cardGap = 0.25;
+        const stats = [
+          { val: '100%', label: 'Defense Ready', col: palette.accent },
+          { val: '12.4x', label: 'Velocity Speed', col: '10B981' },
+          { val: '0.02s', label: 'Response Time', col: 'F59E0B' },
+        ];
+
+        stats.forEach((st, idx) => {
+          const cX = 0.6 + idx * (cardW + cardGap);
+          pSlide.addShape(pptx.ShapeType.roundRect, {
+            x: cX,
+            y: 3.0,
+            w: cardW,
+            h: 1.2,
+            fill: { color: palette.cardBg },
+            line: { color: palette.border, width: 0.75 },
+          });
+          pSlide.addText(st.val, {
+            x: cX,
+            y: 3.1,
+            w: cardW,
+            h: 0.6,
+            fontSize: 22,
+            bold: true,
+            color: st.col,
+            align: 'center',
+            fontFace,
+          });
+          pSlide.addText(st.label, {
+            x: cX,
+            y: 3.7,
+            w: cardW,
+            h: 0.35,
+            fontSize: 9.5,
+            color: palette.secondary,
+            align: 'center',
+            fontFace,
+          });
+        });
+
+        // Bottom Footer
+        pSlide.addText(`${authorText}  •  ${guide}  •  ${academicYear}`, {
+          x: 0.6,
+          y: 4.8,
+          w: 8.8,
+          h: 0.35,
+          fontSize: 10,
+          bold: true,
+          color: palette.secondary,
+          fontFace,
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 9. AURORA GRADIENT & MESH TITLE SLIDE
+      // ────────────────────────────────────────────────────────
+      } else if (isAurora) {
+        // Top Aurora Pill Badge
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: (SLIDE_W - 3.8) / 2,
+          y: 0.45,
+          w: 3.8,
+          h: 0.35,
+          fill: { color: palette.cardBg },
+          line: { color: palette.accent, width: 1.0 },
+        });
+        pSlide.addText(`DISSERTATION // ${templateName.toUpperCase()}`, {
+          x: (SLIDE_W - 3.8) / 2,
+          y: 0.45,
+          w: 3.8,
+          h: 0.35,
+          fontSize: 9,
+          bold: true,
+          color: palette.accent,
+          align: 'center',
+          fontFace,
+        });
+
+        // Frosted Central Hero Card
+        pSlide.addShape(pptx.ShapeType.roundRect, {
+          x: 0.8,
+          y: 1.0,
+          w: 8.4,
+          h: 3.5,
+          fill: { color: palette.cardBg },
+          line: { color: palette.accent, width: 1.0 },
+        });
+
+        const auTitleSize = (slide.title || title).length > 45 ? 24 : 30;
+        pSlide.addText(slide.title || title, {
+          x: 1.1,
+          y: 1.3,
+          w: 7.8,
+          h: 1.4,
+          fontSize: auTitleSize,
+          bold: true,
+          color: palette.primary,
+          align: 'center',
+          fontFace,
+        });
+
+        if (slide.subtitle) {
+          pSlide.addText(slide.subtitle, {
+            x: 1.1,
+            y: 2.8,
+            w: 7.8,
+            h: 0.7,
+            fontSize: 13,
+            color: palette.secondary,
+            align: 'center',
+            fontFace,
+          });
+        }
+
+        // Tags
+        tags.slice(0, 4).forEach((tag, idx) => {
+          const tX = 1.3 + idx * 1.85;
+          pSlide.addShape(pptx.ShapeType.roundRect, {
+            x: tX,
+            y: 3.7,
+            w: 1.7,
+            h: 0.32,
+            fill: { color: palette.background },
+            line: { color: palette.border, width: 0.75 },
+          });
+          pSlide.addText(`#${tag}`, {
+            x: tX,
+            y: 3.7,
+            w: 1.7,
+            h: 0.32,
+            fontSize: 8.5,
+            bold: true,
+            color: palette.accent,
+            align: 'center',
+            fontFace,
+          });
+        });
+
+        // Bottom Footer
+        pSlide.addText(`${authorText}  •  ${guide}  •  ${academicYear}`, {
+          x: 0.8,
+          y: 4.85,
+          w: 8.4,
+          h: 0.35,
+          fontSize: 10,
+          bold: true,
+          color: palette.secondary,
+          align: 'center',
+          fontFace,
+        });
+
+      // ────────────────────────────────────────────────────────
+      // 10. APPLE MINIMAL & CUPERTINO CLEAN TITLE SLIDE (DEFAULT)
+      // ────────────────────────────────────────────────────────
       } else {
-        // Standard / Bento / Minimal / Brutalist Title Slide
         const titleAlign = isCentered ? 'center' : 'left';
         const titleY = isCentered ? 1.3 : 1.1;
 
         // Eyebrow Kicker Chip
         pSlide.addShape(pptx.ShapeType.roundRect, {
-          x: isCentered ? (SLIDE_W - 2.8) / 2 : contentX,
-          y: titleY - 0.45,
-          w: 2.8,
-          h: 0.32,
+          x: isCentered ? (SLIDE_W - 3.2) / 2 : contentX,
+          y: titleY - 0.5,
+          w: 3.2,
+          h: 0.34,
           fill: { color: palette.cardBg },
           line: { color: palette.accent, width: 0.75 },
         });
-        pSlide.addText(templateName.toUpperCase(), {
-          x: isCentered ? (SLIDE_W - 2.8) / 2 : contentX,
-          y: titleY - 0.45,
-          w: 2.8,
-          h: 0.32,
+        pSlide.addText(`● ${templateName.toUpperCase()} SPEC`, {
+          x: isCentered ? (SLIDE_W - 3.2) / 2 : contentX,
+          y: titleY - 0.5,
+          w: 3.2,
+          h: 0.34,
           fontSize: 8.5,
           bold: true,
           color: palette.accent,
@@ -379,7 +1470,7 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
         });
 
         // Main Title
-        const titleFontSize = (slide.title || title).length > 50 ? 26 : 30;
+        const titleFontSize = (slide.title || title).length > 50 ? 26 : 32;
         pSlide.addText(slide.title || title, {
           x: contentX,
           y: titleY,
@@ -406,7 +1497,7 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
           });
         }
 
-        // Compact Tag Chips (Properly spaced so they never overflow!)
+        // Tag Chips
         const tagY = titleY + 2.25;
         const tagW = 1.9;
         const tagGap = 0.15;
@@ -432,14 +1523,14 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
             h: 0.32,
             fontSize: 8.5,
             bold: true,
-            color: palette.accent,
+            color: palette.text,
             align: 'center',
             fontFace,
           });
         });
 
         // Authors & Institution Footer Bar
-        pSlide.addText(`${authorText}  •  ${institution}`, {
+        pSlide.addText(`${authorText}  •  ${guide}  •  ${institution}`, {
           x: contentX,
           y: 4.85,
           w: contentW,
@@ -511,8 +1602,9 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
       const takeaways = (content.takeaways as string[] | undefined) ?? [];
       const layers = (content.layers as { name: string; node: string; details: string }[] | undefined) ?? [];
       const items = (content.items as { component: string; spec: string; cost: string }[] | undefined) ?? [];
-      const rows = (content.rows as { aspect: string; before: string; after: string }[] | undefined) ?? [];
-      const metrics = (content.metrics as { label: string; value: string; sub?: string }[] | undefined) ?? [];
+      const rows = (content.rows as { aspect?: string; dimension?: string; before?: string; baseline?: string; after?: string; proposed?: string; status?: string }[] | undefined) ?? [];
+      const metrics = (content.metrics as { label: string; value: string; sub?: string; delta?: string }[] | undefined) ?? [];
+      const comparison = (content.comparison as { title?: string; aspect?: string; flaw?: string; desc?: string; severity?: string }[] | undefined) ?? [];
 
       const visualType = slide.visualType;
 
@@ -809,14 +1901,18 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
         const rightX = contentX + leftW + 0.3;
 
         // Left Side: 3 Challenge Cards
-        const challengeList = bullets.length > 0 ? bullets.slice(0, 3) : ['Core systemic bottleneck identified'];
+        const challengeList = comparison.length > 0
+          ? comparison.slice(0, 3).map((c, i) => ({ title: c.title || c.aspect || `CHALLENGE 0${i + 1}`, desc: c.desc || c.flaw || 'Operational constraint identified in baseline.' }))
+          : bullets.length > 0
+          ? bullets.slice(0, 3).map((b, i) => ({ title: `CHALLENGE 0${i + 1}`, desc: b.replace(/^\*\*[^*]+\*\*:\s*/, '') }))
+          : [{ title: 'CHALLENGE 01', desc: 'Core systemic bottleneck identified in baseline.' }];
         const cardH = (contentH - (challengeList.length - 1) * 0.15) / challengeList.length;
 
         challengeList.forEach((ch, idx) => {
           const cY = contentY + idx * (cardH + 0.15);
           drawCard(contentX, cY, leftW, cardH);
 
-          pSlide.addText(`CHALLENGE 0${idx + 1}`, {
+          pSlide.addText(ch.title.toUpperCase(), {
             x: contentX + 0.2,
             y: cY + 0.12,
             w: leftW - 0.4,
@@ -827,7 +1923,7 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
             fontFace,
           });
 
-          pSlide.addText(ch, {
+          pSlide.addText(ch.desc, {
             x: contentX + 0.2,
             y: cY + 0.38,
             w: leftW - 0.4,
@@ -1003,11 +2099,19 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
       // CASE 5: Results, Charts & KPI Dashboard
       // ────────────────────────────────────────────────────────
       } else if (visualType === 'results_charts' || visualType === 'statistics' || visualType === 'kpi_dashboard' || benchmarks.length > 0) {
-        const benchList = benchmarks.length > 0 ? benchmarks.slice(0, 3) : [
-          { label: 'Empirical Accuracy', value: '99.4%', change: 'Validation ROC AUC 0.998' },
-          { label: 'Inference Latency', value: '42ms', change: 'FP16 TensorRT Engine' },
-          { label: 'False Accept Rate', value: '0.001%', change: 'Zero False Approvals' },
-        ];
+        const benchList = metrics.length > 0
+          ? metrics.slice(0, 3).map((m, i) => ({
+              label: m.label || `Metric 0${i + 1}`,
+              value: m.value || '99.4%',
+              change: m.delta || m.sub || 'Verified SLA',
+            }))
+          : benchmarks.length > 0
+          ? benchmarks.slice(0, 3)
+          : [
+              { label: 'System Reliability', value: '99.4%', change: 'Empirical SLA' },
+              { label: 'Execution Latency', value: '< 45ms', change: 'Deterministic target' },
+              { label: 'Throughput Gain', value: '4.8x', change: 'Multi-stream pipeline' },
+            ];
 
         // Top Row: 3 Massive Stat Cards
         const topH = 1.6;
@@ -1115,9 +2219,9 @@ export async function generatePptxFromProject(input: GeneratePptxInput): Promise
           rows.slice(0, 4).forEach((r, idx) => {
             const rowFill = idx % 2 === 0 ? palette.cardBg : palette.background;
             tableRows.push([
-              { text: r.aspect, options: { fill: rowFill, color: palette.text, bold: true } },
-              { text: r.before, options: { fill: rowFill, color: palette.secondary } },
-              { text: r.after, options: { fill: rowFill, color: palette.text, bold: true } },
+              { text: r.dimension || r.aspect || `Dimension 0${idx + 1}`, options: { fill: rowFill, color: palette.text, bold: true } },
+              { text: r.baseline || r.before || 'Traditional baseline', options: { fill: rowFill, color: palette.secondary } },
+              { text: r.proposed || r.after || 'Proposed solution', options: { fill: rowFill, color: palette.accent, bold: true } },
             ]);
           });
         } else {

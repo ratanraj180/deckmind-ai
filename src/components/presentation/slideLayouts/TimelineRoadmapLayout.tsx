@@ -7,13 +7,15 @@ export function TimelineRoadmapLayout({ slide, template }: SlideLayoutProps) {
   const pal = template.palette;
   const content = (slide.content || {}) as Record<string, any>;
   const isBrutalist = template.layoutFamily === 'brutalist' || template.layoutStyle === 'neo-brutalist';
+  const isEditorial = template.fontMood === 'editorial';
 
   const milestones = Array.isArray(content.milestones) && content.milestones.length > 0
     ? content.milestones
     : [
-        { phase: 'Phase 1', title: 'Silicon Prototyping & Pipeline Design', desc: 'Hardware benchmarking, sensor calibration, and optical alignment on Jetson.' },
-        { phase: 'Phase 2', title: 'Neural Model Optimization & Quantization', desc: 'TensorRT FP16 quantization, loss convergence verification, and FAISS indexing.' },
-        { phase: 'Phase 3', title: 'Industrial Deployment & Multi-Node Cluster', desc: 'Air-gapped production roll-out, automated health telemetry, and cloud synchronization.' },
+        { phase: 'Phase 01', title: 'Architectural Scoping', desc: 'Requirements analysis, domain benchmark definition, and baseline scoping.' },
+        { phase: 'Phase 02', title: 'Core Pipeline Prototype', desc: 'End-to-end integration of ingestion, processing core, and persistence.' },
+        { phase: 'Phase 03', title: 'Empirical Verification', desc: 'Stress testing, latency optimization, and statistical validation under load.' },
+        { phase: 'Phase 04', title: 'Production Staging', desc: 'Deployment to live target environments with real-time telemetry monitoring.' },
       ];
 
   return (
@@ -28,10 +30,10 @@ export function TimelineRoadmapLayout({ slide, template }: SlideLayoutProps) {
             // DEPLOYMENT HORIZON & ROADMAP
           </span>
           <span className="text-[9px] font-mono opacity-60 uppercase">
-            3-PHASE EXECUTION
+            ${milestones.length}-PHASE EXECUTION
           </span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: pal.primary }}>
+        <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isEditorial ? 'font-serif capitalize' : ''}`} style={{ color: pal.primary }}>
           {slide.title}
         </h2>
         {slide.subtitle && (
@@ -50,8 +52,8 @@ export function TimelineRoadmapLayout({ slide, template }: SlideLayoutProps) {
             style={{ backgroundColor: pal.border }}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10 items-stretch">
-            {milestones.slice(0, 3).map((m: any, idx: number) => (
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 relative z-10 items-stretch">
+            {milestones.slice(0, 4).map((m: any, idx: number) => (
               <div key={idx} className="space-y-3">
                 {/* Milestone Node */}
                 <div className="flex items-center gap-2">
@@ -61,16 +63,16 @@ export function TimelineRoadmapLayout({ slide, template }: SlideLayoutProps) {
                     }`}
                     style={!isBrutalist ? { backgroundColor: pal.accent } : undefined}
                   >
-                    0{idx + 1}
+                    0${idx + 1}
                   </div>
-                  <span className="text-[10px] font-mono font-bold uppercase opacity-60">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: pal.accent }}>
                     {m.phase || `PHASE 0${idx + 1}`}
                   </span>
                 </div>
 
-                {/* Milestone Card */}
+                {/* Milestone Content Card */}
                 <div
-                  className={`p-4 h-44 flex flex-col justify-between ${
+                  className={`p-3.5 h-full flex flex-col justify-between transition-all ${
                     isBrutalist
                       ? 'border-2 border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
                       : 'rounded-xl border'
@@ -78,19 +80,12 @@ export function TimelineRoadmapLayout({ slide, template }: SlideLayoutProps) {
                   style={!isBrutalist ? { backgroundColor: pal.cardBg, borderColor: pal.border } : undefined}
                 >
                   <div className="space-y-1">
-                    <h4 className="text-xs sm:text-sm font-bold leading-tight" style={{ color: pal.primary }}>
+                    <h4 className={`text-xs sm:text-sm font-bold leading-tight ${isEditorial ? 'font-serif' : ''}`} style={{ color: pal.primary }}>
                       {m.title}
                     </h4>
-                    <p className="text-[11px] opacity-75 leading-relaxed line-clamp-4">
+                    <p className="text-[11px] opacity-75 leading-relaxed">
                       {m.desc}
                     </p>
-                  </div>
-
-                  <div className="pt-2 border-t border-current/10 flex items-center justify-between text-[9px] font-mono opacity-60">
-                    <span>STAGE STATUS</span>
-                    <span className="font-bold" style={{ color: pal.accent }}>
-                      {idx === 0 ? 'COMPLETED' : idx === 1 ? 'CURRENT' : 'PLANNED'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -101,7 +96,7 @@ export function TimelineRoadmapLayout({ slide, template }: SlideLayoutProps) {
 
       {/* Slide Footer */}
       <div className={`flex items-center justify-between border-t pt-2 text-[9px] font-mono opacity-60 ${isBrutalist ? 'border-t-2 border-black' : ''}`} style={{ borderColor: pal.border }}>
-        <span>MILESTONE TIMELINE HORIZON</span>
+        <span>PROJECT TIMELINE & HORIZON</span>
         <span>SLIDE {slide.slideNumber}</span>
       </div>
     </div>

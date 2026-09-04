@@ -5,10 +5,12 @@ export interface IPayment extends Document {
   presentationId: string;
   amount: number; // in paise (1000 = ₹10)
   currency: string;
-  provider: string; // 'razorpay'
+  provider: string; // 'razorpay' | 'upi_demo'
   providerOrderId: string;
   providerPaymentId?: string;
   providerSignature?: string;
+  isDemo?: boolean;
+  demoNote?: string;
   status: 'PENDING' | 'SUCCESSFUL' | 'FAILED';
   createdAt: Date;
   updatedAt: Date;
@@ -50,6 +52,15 @@ const PaymentSchema = new Schema<IPayment>(
       index: true,
     },
     providerSignature: {
+      type: String,
+      default: null,
+    },
+    isDemo: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    demoNote: {
       type: String,
       default: null,
     },

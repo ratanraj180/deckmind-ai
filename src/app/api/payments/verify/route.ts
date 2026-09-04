@@ -41,7 +41,13 @@ export async function POST(request: NextRequest) {
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    if (expectedSignature !== razorpay_signature) {
+    const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+    const actualBuffer = Buffer.from(razorpay_signature, 'utf8');
+    const isSignatureValid =
+      expectedBuffer.length === actualBuffer.length &&
+      crypto.timingSafeEqual(expectedBuffer, actualBuffer);
+
+    if (!isSignatureValid) {
       console.error(`[DeckMind Payment] Signature mismatch! order=${razorpay_order_id}`);
       return NextResponse.json({ success: false, error: 'Payment verification failed. Invalid signature.' }, { status: 400 });
     }
@@ -52,11 +58,28 @@ export async function POST(request: NextRequest) {
         providerOrderId: razorpay_order_id,
         userId,
         status: 'PENDING',
+        presentationId,
       },
     });
 
     if (!payment) {
-      return NextResponse.json({ success: false, error: 'Payment record not found.' }, { status: 404 });
+      // Check if it was already marked successful (idempotent retry)
+      const existingSuccess = await db.payment.findFirst({
+        where: {
+          providerOrderId: razorpay_order_id,
+          userId,
+          status: 'SUCCESSFUL',
+          presentationId,
+        },
+      });
+      if (existingSuccess) {
+        return NextResponse.json({
+          success: true,
+          message: 'Payment already verified.',
+          presentationId,
+        });
+      }
+      return NextResponse.json({ success: false, error: 'Payment record not found or does not match this presentation.' }, { status: 404 });
     }
 
     await db.payment.update({
