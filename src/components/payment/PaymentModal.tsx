@@ -26,6 +26,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { usePresentation } from '@/context/PresentationContext';
+import { IS_PAYMENT_ENABLED } from '@/lib/config/features';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -677,6 +678,10 @@ export function DownloadButton() {
   const [isPaid, setIsPaid] = useState(activeProject.isPaid ?? false);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  const auth = useSession();
+  const authStatus = auth?.status ?? 'unauthenticated';
+  const router = useRouter();
+
   const triggerPptxDownload = async () => {
     setIsDownloading(true);
     try {
@@ -713,6 +718,15 @@ export function DownloadButton() {
   };
 
   const handleClick = () => {
+    if (!IS_PAYMENT_ENABLED) {
+      if (authStatus !== 'authenticated') {
+        router.push('/login?callbackUrl=/presentation');
+        return;
+      }
+      triggerPptxDownload();
+      return;
+    }
+
     if (!isPaid) {
       setShowPayment(true);
     } else {
@@ -726,7 +740,7 @@ export function DownloadButton() {
         onClick={handleClick}
         disabled={isDownloading}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-          isPaid
+          (!IS_PAYMENT_ENABLED || isPaid)
             ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-white shadow-md shadow-emerald-600/20'
             : 'bg-gradient-to-r from-blue-600 via-violet-600 to-fuchsia-500 hover:opacity-95 text-white shadow-md shadow-violet-600/20'
         } disabled:opacity-75`}
@@ -736,10 +750,10 @@ export function DownloadButton() {
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>Building PPTX...</span>
           </>
-        ) : isPaid ? (
+        ) : (!IS_PAYMENT_ENABLED || isPaid) ? (
           <>
             <Download className="h-4 w-4" />
-            <span>Download PPTX</span>
+            <span>{IS_PAYMENT_ENABLED ? 'Download PPTX' : 'Download PPT Free'}</span>
           </>
         ) : (
           <>
@@ -749,17 +763,19 @@ export function DownloadButton() {
         )}
       </button>
 
-      <PaymentModal
-        isOpen={showPayment}
-        onClose={() => setShowPayment(false)}
-        onSuccess={() => {
-          setIsPaid(true);
-          setShowPayment(false);
-          setTimeout(() => {
-            triggerPptxDownload();
-          }, 300);
-        }}
-      />
+      {IS_PAYMENT_ENABLED && (
+        <PaymentModal
+          isOpen={showPayment}
+          onClose={() => setShowPayment(false)}
+          onSuccess={() => {
+            setIsPaid(true);
+            setShowPayment(false);
+            setTimeout(() => {
+              triggerPptxDownload();
+            }, 300);
+          }}
+        />
+      )}
     </>
   );
 }

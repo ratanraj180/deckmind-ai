@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { IS_PAYMENT_ENABLED } from '@/lib/config/features';
 
 export function SimplePricing() {
   return (
@@ -30,14 +31,14 @@ export function SimplePricing() {
           <div className="rounded-[22px] bg-white p-8 sm:p-10 text-center space-y-6 relative overflow-hidden">
             <div className="space-y-1.5">
               <span className="text-xs font-mono uppercase tracking-wider text-indigo-700 font-extrabold bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200/60 inline-block">
-                Pay As You Go
+                {IS_PAYMENT_ENABLED ? 'Pay As You Go' : 'Completely Free'}
               </span>
               <h3 className="text-2xl font-bold text-slate-900 pt-2">Full Presentation Deck</h3>
             </div>
 
             <div className="flex items-baseline justify-center gap-1.5 pt-1">
               <span className="text-6xl font-black tracking-tight font-mono gradient-text">
-                ₹10
+                {IS_PAYMENT_ENABLED ? '₹10' : 'Free'}
               </span>
               <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">/ deck</span>
             </div>
@@ -78,7 +79,7 @@ export function SimplePricing() {
               </Link>
               <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 font-medium">
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <span>First 3 generations are completely free</span>
+                <span>{IS_PAYMENT_ENABLED ? 'First 3 generations are completely free' : 'Enjoy unlimited generations for free'}</span>
               </div>
             </div>
           </div>

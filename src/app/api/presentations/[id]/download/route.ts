@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { db } from '@/lib/db/client';
 import { generatePptxFromProject } from '@/lib/pptx/pptxGenerator';
 import { PresentationProject, SlideData, TemplateSnapshot } from '@/types/presentation';
+import { IS_PAYMENT_ENABLED } from '@/lib/config/features';
 
 interface DownloadPayload {
   project?: PresentationProject;
@@ -35,7 +36,7 @@ export async function POST(
     const config = (project?.config || body.config || {}) as Record<string, unknown>;
 
     // Verify payment before allowing download when Razorpay is configured
-    if (process.env.RAZORPAY_KEY_SECRET) {
+    if (IS_PAYMENT_ENABLED && process.env.RAZORPAY_KEY_SECRET) {
       const isProjectPaid = project?.isPaid === true;
       if (!isProjectPaid) {
         const dbPresentation = await db.presentation.findUnique({
